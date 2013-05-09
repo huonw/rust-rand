@@ -40,7 +40,7 @@ impl Rng for XorShiftRng {
         self.w
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
     }

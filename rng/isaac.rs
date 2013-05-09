@@ -128,7 +128,7 @@ pub impl IsaacRng {
 
         static midpoint: uint =  RAND_SIZE as uint / 2;
 
-        macro_rules! ind (($x:expr) => { self.mem[($x >> 2) & (RAND_SIZE - 1)] });
+        macro_rules! ind (($x:expr) => { self.mem.unsafe_get((($x >> 2) & (RAND_SIZE - 1)) as uint) });
         macro_rules! rngstep(
             ($j:expr, $shift:expr) => {{
                 let base = base + $j;
@@ -138,13 +138,13 @@ pub impl IsaacRng {
                     a << $shift as uint
                 };
 
-                let x = self.mem[base  + mr_offset];
-                a = (a ^ mix) + self.mem[base + m2_offset];
+                let x = self.mem.unsafe_get((base + mr_offset) as uint);
+                a = (a ^ mix) + self.mem.unsafe_get((base + m2_offset) as uint);
                 let y = ind!(x) + a + b;
-                self.mem[base + mr_offset] = y;
+                self.mem.unsafe_set((base + mr_offset) as uint, y);
 
                 b = ind!(y >> RAND_SIZE_LEN) + x;
-                self.rsl[base + mr_offset] = b;
+                self.rsl.unsafe_set((base + mr_offset) as uint, b);
             }}
         );
 
@@ -164,17 +164,17 @@ pub impl IsaacRng {
 }
 
 impl Rng for IsaacRng {
-    #[inline(always)]
+    #[inline]
     fn next32(&mut self) -> u32 {
         if self.cnt == 0 {
             // make some more numbers
             self.isaac();
         }
         self.cnt -= 1;
-        self.rsl[self.cnt]
+        self.rsl.unsafe_get(self.cnt as uint)
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
     }
@@ -286,7 +286,7 @@ pub impl Isaac64Rng {
         let mut a = self.a, b = self.b + self.c;
         static midpoint: u64 =  RAND_SIZE_64 / 2;
 
-        macro_rules! ind (($x:expr) => { self.mem[$x & (RAND_SIZE_64 - 1)] });
+        macro_rules! ind (($x:expr) => { self.mem.unsafe_get(($x & (RAND_SIZE_64 - 1)) as uint) });
         macro_rules! rngstep(
             ($j:expr, $shift:expr) => {{
                 let base = base + $j;
@@ -301,13 +301,13 @@ pub impl Isaac64Rng {
                     mix
                 };
 
-                let x = self.mem[base  + mr_offset];
-                a = mix + self.mem[base + m2_offset];
+                let x = self.mem.unsafe_get((base + mr_offset) as uint);
+                a = mix + self.mem.unsafe_get((base + m2_offset) as uint);
                 let y = ind!(x) + a + b;
-                self.mem[base + mr_offset] = y;
+                self.mem.unsafe_set((base + mr_offset) as uint, y);
 
                 b = ind!(y >> RAND_SIZE_64_LEN) + x;
-                self.rsl[base + mr_offset] = b;
+                self.rsl.unsafe_set((base + mr_offset) as uint, b);
             }}
         );
 
@@ -338,6 +338,6 @@ impl Rng for Isaac64Rng {
             self.isaac64();
         }
         self.cnt -= 1;
-        self.rsl[self.cnt]
+        self.rsl.unsafe_get(self.cnt as uint)
     }
 }
