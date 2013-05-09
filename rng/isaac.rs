@@ -232,7 +232,7 @@ pub impl Isaac64Rng {
                 let mut $( $var = $val ),*;
             }
         );
-        init_mut_many!(a, b, c, d, e, f, g, h = 0x9e3779b9);
+        init_mut_many!(a, b, c, d, e, f, g, h = 0x9e3779b97f4a7c13);
 
 
         macro_rules! mix(
@@ -286,7 +286,15 @@ pub impl Isaac64Rng {
         let mut a = self.a, b = self.b + self.c;
         static midpoint: uint =  RAND_SIZE_64 / 2;
 
-        macro_rules! ind (($x:expr) => { self.mem.unsafe_get(($x as uint & (RAND_SIZE_64 - 1))) });
+        macro_rules! ind (
+            ($x:expr) => {
+                unsafe {
+                    let bytes: &[u8, .. RAND_SIZE_64 * 8] = cast::transmute(&self.mem);
+                    let ptr = bytes.unsafe_ref(($x as uint & ((RAND_SIZE_64 - 1) << 3)));
+                    *cast::transmute::<*u8, *u64>(ptr)
+                }
+            }
+        );
         macro_rules! rngstep(
             ($j:expr, $shift:expr) => {{
                 let base = base + $j;

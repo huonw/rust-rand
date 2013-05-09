@@ -191,7 +191,8 @@ word flag;
 int main() {
   unsigned a;
   randinit(0);
-  ub4 sum = 0;
+
+  ub8 sum = 0;
   for (a = 0; a <100000000; a++) {
     sum += rand();
   }
