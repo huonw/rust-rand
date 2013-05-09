@@ -1,13 +1,13 @@
 use traits::Rng;
 use rng::rt::seed;
 
-static RAND_SIZE_LEN: u32 = 8;
-static RAND_SIZE: u32 = 1 << RAND_SIZE_LEN;
+static RAND_SIZE_LEN: uint = 8;
+static RAND_SIZE: uint = 1 << RAND_SIZE_LEN;
 
 /// A random number generator that uses the [ISAAC
 /// algorithm](http://en.wikipedia.org/wiki/ISAAC_%28cipher%29).
 pub struct IsaacRng {
-    priv cnt: u32,
+    priv cnt: uint,
     priv rsl: [u32, .. RAND_SIZE],
     priv mem: [u32, .. RAND_SIZE],
     priv a: u32,
@@ -87,7 +87,7 @@ pub impl IsaacRng {
         if use_rsl {
             macro_rules! memloop (
                 ($arr:expr) => {{
-                    for u32::range_step(0, RAND_SIZE, 8) |i| {
+                    for uint::range_step(0, RAND_SIZE, 8) |i| {
                         a+=$arr[i  ]; b+=$arr[i+1];
                         c+=$arr[i+2]; d+=$arr[i+3];
                         e+=$arr[i+4]; f+=$arr[i+5];
@@ -104,7 +104,7 @@ pub impl IsaacRng {
             memloop!(self.rsl);
             memloop!(self.mem);
         } else {
-            for u32::range_step(0, RAND_SIZE, 8) |i| {
+            for uint::range_step(0, RAND_SIZE, 8) |i| {
                 mix!();
                 self.mem[i  ]=a; self.mem[i+1]=b;
                 self.mem[i+2]=c; self.mem[i+3]=d;
@@ -126,9 +126,9 @@ pub impl IsaacRng {
         let rsl = &mut self.rsl;*/
 
 
-        static midpoint: uint =  RAND_SIZE as uint / 2;
+        static midpoint: uint =  RAND_SIZE / 2;
 
-        macro_rules! ind (($x:expr) => { self.mem.unsafe_get((($x >> 2) & (RAND_SIZE - 1)) as uint) });
+        macro_rules! ind (($x:expr) => { self.mem.unsafe_get((($x >> 2) as uint & (RAND_SIZE - 1))) });
         macro_rules! rngstep(
             ($j:expr, $shift:expr) => {{
                 let base = base + $j;
@@ -138,13 +138,13 @@ pub impl IsaacRng {
                     a << $shift as uint
                 };
 
-                let x = self.mem.unsafe_get((base + mr_offset) as uint);
-                a = (a ^ mix) + self.mem.unsafe_get((base + m2_offset) as uint);
+                let x = self.mem.unsafe_get(base + mr_offset);
+                a = (a ^ mix) + self.mem.unsafe_get(base + m2_offset);
                 let y = ind!(x) + a + b;
-                self.mem.unsafe_set((base + mr_offset) as uint, y);
+                self.mem.unsafe_set(base + mr_offset, y);
 
                 b = ind!(y >> RAND_SIZE_LEN) + x;
-                self.rsl.unsafe_set((base + mr_offset) as uint, b);
+                self.rsl.unsafe_set(base + mr_offset, b);
             }}
         );
 
@@ -171,7 +171,7 @@ impl Rng for IsaacRng {
             self.isaac();
         }
         self.cnt -= 1;
-        self.rsl.unsafe_get(self.cnt as uint)
+        self.rsl.unsafe_get(self.cnt)
     }
 
     #[inline(always)]
@@ -181,12 +181,12 @@ impl Rng for IsaacRng {
 }
 
 
-static RAND_SIZE_64_LEN: u64 = 8;
-static RAND_SIZE_64: u64 = 1 << RAND_SIZE_64_LEN;
+static RAND_SIZE_64_LEN: uint = 8;
+static RAND_SIZE_64: uint = 1 << RAND_SIZE_64_LEN;
 
 
 pub struct Isaac64Rng {
-    priv cnt: u64,
+    priv cnt: uint,
     priv rsl: [u64, .. RAND_SIZE_64],
     priv mem: [u64, .. RAND_SIZE_64],
     priv a: u64,
@@ -252,7 +252,7 @@ pub impl Isaac64Rng {
         if use_rsl {
             macro_rules! memloop (
                 ($arr:expr) => {{
-                    for u64::range_step(0, RAND_SIZE_64, 8) |i| {
+                    for uint::range_step(0, RAND_SIZE_64, 8) |i| {
                         a+=$arr[i  ]; b+=$arr[i+1];
                         c+=$arr[i+2]; d+=$arr[i+3];
                         e+=$arr[i+4]; f+=$arr[i+5];
@@ -269,7 +269,7 @@ pub impl Isaac64Rng {
             memloop!(self.rsl);
             memloop!(self.mem);
         } else {
-            for u64::range_step(0, RAND_SIZE_64, 8) |i| {
+            for uint::range_step(0, RAND_SIZE_64, 8) |i| {
                 mix!();
                 self.mem[i  ]=a; self.mem[i+1]=b;
                 self.mem[i+2]=c; self.mem[i+3]=d;
@@ -284,9 +284,9 @@ pub impl Isaac64Rng {
         self.c += 1;
         // abbreviations
         let mut a = self.a, b = self.b + self.c;
-        static midpoint: u64 =  RAND_SIZE_64 / 2;
+        static midpoint: uint =  RAND_SIZE_64 / 2;
 
-        macro_rules! ind (($x:expr) => { self.mem.unsafe_get(($x & (RAND_SIZE_64 - 1)) as uint) });
+        macro_rules! ind (($x:expr) => { self.mem.unsafe_get(($x as uint & (RAND_SIZE_64 - 1))) });
         macro_rules! rngstep(
             ($j:expr, $shift:expr) => {{
                 let base = base + $j;
@@ -301,18 +301,18 @@ pub impl Isaac64Rng {
                     mix
                 };
 
-                let x = self.mem.unsafe_get((base + mr_offset) as uint);
-                a = mix + self.mem.unsafe_get((base + m2_offset) as uint);
+                let x = self.mem.unsafe_get(base + mr_offset);
+                a = mix + self.mem.unsafe_get(base + m2_offset);
                 let y = ind!(x) + a + b;
-                self.mem.unsafe_set((base + mr_offset) as uint, y);
+                self.mem.unsafe_set(base + mr_offset, y);
 
                 b = ind!(y >> RAND_SIZE_64_LEN) + x;
-                self.rsl.unsafe_set((base + mr_offset) as uint, b);
+                self.rsl.unsafe_set(base + mr_offset, b);
             }}
         );
 
         for [(0, midpoint), (midpoint, 0)].each |&(mr_offset, m2_offset)| {
-            for u64::range_step(0, midpoint, 4) |base| {
+            for uint::range_step(0, midpoint, 4) |base| {
                 rngstep!(0, 21);
                 rngstep!(1, -5);
                 rngstep!(2, 12);
@@ -338,6 +338,6 @@ impl Rng for Isaac64Rng {
             self.isaac64();
         }
         self.cnt -= 1;
-        self.rsl.unsafe_get(self.cnt as uint)
+        self.rsl.unsafe_get(self.cnt)
     }
 }
