@@ -3,10 +3,12 @@ pub use self::xorshift::*;
 pub use self::mersenne_twister::*;
 pub use self::isaac::*;
 pub use self::misc::*;
+pub use self::lcg::*;
 
 pub mod xorshift;
 pub mod mersenne_twister;
 pub mod isaac;
+pub mod lcg;
 pub mod misc;
 
 pub mod rt;
@@ -220,5 +222,39 @@ mod bench {
     #[bench]
     fn cmwc_f64(b: &mut std::test::BenchHarness){
         bench_rng!(CMWCRng, f64);
+    }
+
+    #[bench]
+    fn minstd_rand_u32(b: &mut std::test::BenchHarness){
+        bench_rng!(MinStd_Rand, u32);
+    }
+    #[bench]
+    fn minstd_rand_u64(b: &mut std::test::BenchHarness){
+        bench_rng!(MinStd_Rand, u64);
+    }
+    #[bench]
+    fn minstd_rand_f32(b: &mut std::test::BenchHarness){
+        bench_rng!(MinStd_Rand, f32);
+    }
+    #[bench]
+    fn minstd_rand_f64(b: &mut std::test::BenchHarness){
+        bench_rng!(MinStd_Rand, f64);
+    }
+
+    #[bench]
+    fn rand48_u32(b: &mut std::test::BenchHarness){
+        bench_rng!(Rand48, u32);
+    }
+    #[bench]
+    fn rand48_u64(b: &mut std::test::BenchHarness){
+        bench_rng!(Rand48, u64);
+    }
+    #[bench]
+    fn rand48_f32(b: &mut std::test::BenchHarness){
+        bench_rng!(Rand48, f32);
+    }
+    #[bench]
+    fn rand48_f64(b: &mut std::test::BenchHarness){
+        bench_rng!(Rand48, f64);
     }
 }
