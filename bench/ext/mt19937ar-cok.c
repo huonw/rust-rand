@@ -44,6 +44,7 @@
 */
 
 #include <stdio.h>
+#include <stdint.h>
 
 /* Period parameters */
 #define N 624
@@ -54,13 +55,13 @@
 #define MIXBITS(u,v) ( ((u) & UMASK) | ((v) & LMASK) )
 #define TWIST(u,v) ((MIXBITS(u,v) >> 1) ^ ((v)&1UL ? MATRIX_A : 0UL))
 
-static unsigned long state[N]; /* the array for the state vector  */
+static uint32_t state[N]; /* the array for the state vector  */
 static int left = 1;
 static int initf = 0;
-static unsigned long *next;
+static uint32_t *next;
 
 /* initializes state[N] with a seed */
-void init_genrand(unsigned long s)
+void init_genrand(uint32_t s)
 {
     int j;
     state[0]= s & 0xffffffffUL;
@@ -79,7 +80,7 @@ void init_genrand(unsigned long s)
 /* init_key is the array for initializing keys */
 /* key_length is its length */
 /* slight change for C++, 2004/2/26 */
-void init_by_array(unsigned long init_key[], int key_length)
+void init_by_array(uint32_t init_key[], int key_length)
 {
     int i, j, k;
     init_genrand(19650218UL);
@@ -107,7 +108,7 @@ void init_by_array(unsigned long init_key[], int key_length)
 
 static void next_state(void)
 {
-    unsigned long *p=state;
+    uint32_t *p=state;
     int j;
 
     /* if init_genrand() has not been called, */
@@ -127,9 +128,9 @@ static void next_state(void)
 }
 
 /* generates a random number on [0,0xffffffff]-interval */
-unsigned long genrand_int32(void)
+uint32_t genrand_int32(void)
 {
-    unsigned long y;
+    uint32_t y;
 
     if (--left == 0) next_state();
     y = *next++;
@@ -146,7 +147,7 @@ unsigned long genrand_int32(void)
 /* generates a random number on [0,0x7fffffff]-interval */
 long genrand_int31(void)
 {
-    unsigned long y;
+    uint32_t y;
 
     if (--left == 0) next_state();
     y = *next++;
@@ -163,7 +164,7 @@ long genrand_int31(void)
 /* generates a random number on [0,1]-real-interval */
 double genrand_real1(void)
 {
-    unsigned long y;
+    uint32_t y;
 
     if (--left == 0) next_state();
     y = *next++;
@@ -181,7 +182,7 @@ double genrand_real1(void)
 /* generates a random number on [0,1)-real-interval */
 double genrand_real2(void)
 {
-    unsigned long y;
+    uint32_t y;
 
     if (--left == 0) next_state();
     y = *next++;
@@ -199,7 +200,7 @@ double genrand_real2(void)
 /* generates a random number on (0,1)-real-interval */
 double genrand_real3(void)
 {
-    unsigned long y;
+    uint32_t y;
 
     if (--left == 0) next_state();
     y = *next++;
@@ -217,7 +218,7 @@ double genrand_real3(void)
 /* generates a random number on [0,1) with 53-bit resolution*/
 double genrand_res53(void)
 {
-    unsigned long a=genrand_int32()>>5, b=genrand_int32()>>6;
+    uint32_t a=genrand_int32()>>5, b=genrand_int32()>>6;
     return(a*67108864.0+b)*(1.0/9007199254740992.0);
 }
 /* These real versions are due to Isaku Wada, 2002/01/09 added */
@@ -226,7 +227,7 @@ int main(void)
 {
   int i;
   init_genrand(1234);
-  unsigned sum = 0;
+  uint32_t sum = 0;
   for (i = 0; i < 100000000; i++) {
     sum += genrand_int32();
   }
