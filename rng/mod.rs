@@ -18,7 +18,7 @@ struct StdRng { priv rng: IsaacRng }
 
 #[cfg(not(target_word_size="64"))]
 impl StdRng {
-    fn new() -> StdRng {
+    pub fn new() -> StdRng {
         StdRng { rng: IsaacRng::new() }
     }
 }
@@ -29,7 +29,7 @@ struct StdRng { priv rng: Isaac64Rng }
 
 #[cfg(target_word_size="64")]
 impl StdRng {
-    fn new() -> StdRng {
+    pub fn new() -> StdRng {
         StdRng { rng: Isaac64Rng::new() }
     }
 }
@@ -43,6 +43,10 @@ impl Rng for StdRng {
     #[inline(always)]
     fn next64(&mut self) -> u64 {
         self.rng.next64()
+    }
+    #[inline(always)]
+    fn fill_vec(&mut self, v: &mut [u32]) {
+        self.rng.fill_vec(v)
     }
 }
 
