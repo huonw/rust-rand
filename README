@@ -1,0 +1,6 @@
+In-progress rewrite of the random number library in Rust's stdlib. 
+
+See https://github.com/mozilla/rust/wiki/Lib-rand for (some) info.
+
+Currently the architecture is a bit strange. Requires a recent 
+incoming build.
