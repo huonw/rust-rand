@@ -1,1 +1,1 @@
-mt19937ar.c
+mt19937ar-cok.c
