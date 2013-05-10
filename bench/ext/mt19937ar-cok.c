@@ -228,7 +228,7 @@ int main(void)
   int i;
   init_genrand(1234);
   uint32_t sum = 0;
-  for (i = 0; i < 100000000; i++) {
+  for (i = 0; i < 1000000000; i++) {
     sum += genrand_int32();
   }
   printf("%u\n", sum);

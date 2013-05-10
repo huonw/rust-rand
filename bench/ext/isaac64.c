@@ -192,9 +192,8 @@ word flag;
 int main() {
   unsigned a;
   randinit(0);
-
   ub8 sum = 0;
-  for (a = 0; a <100000000; a++) {
+  for (a = 0; a <1000000000; a++) {
     sum += rand();
   }
   printf("%llu\n", sum);

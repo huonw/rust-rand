@@ -6,7 +6,7 @@ fn main() {
     let mut rng = rng::isaac::IsaacRng::new_unseeded();
 
     let mut sum = 0;
-    for 100_000_000.times {
+    for 1_000_000_000.times {
         sum += rng.next32();
     }
     println(fmt!("%?", sum));

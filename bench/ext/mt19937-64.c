@@ -171,7 +171,7 @@ int main(void)
   int i;
   init_genrand64(1234);
   unsigned long long sum = 0;
-  for (i = 0; i < 100000000; i++) {
+  for (i = 0; i < 1000000000; i++) {
     sum += genrand64_int64();
   }
   printf("%llu\n", sum);

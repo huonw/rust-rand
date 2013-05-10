@@ -220,7 +220,7 @@ int main() {
   randctx *ctx = calloc(sizeof *ctx, 1);
   randinit(ctx, 0);
   ub4 sum = 0;
-  for (a = 0; a <100000000; a++) {
+  for (a = 0; a <1000000000; a++) {
     sum += isaac_rand(ctx);
   }
   printf("%u\n", sum);
