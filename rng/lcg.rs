@@ -26,6 +26,12 @@ impl Rng for MinStd_Rand {
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
     }
+
+    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
+        for v.each_mut |elem| {
+            *elem = self.next32();
+        }
+    }
 }
 
 pub struct Rand48 {
@@ -51,5 +57,12 @@ impl Rng for Rand48 {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
+    }
+
+
+    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
+        for v.each_mut |elem| {
+            *elem = self.next32();
+        }
     }
 }

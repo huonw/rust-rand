@@ -178,6 +178,12 @@ impl Rng for IsaacRng {
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
     }
+
+    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
+        for v.each_mut |elem| {
+            *elem = self.next32();
+        }
+    }
 }
 
 
@@ -347,5 +353,19 @@ impl Rng for Isaac64Rng {
         }
         self.cnt -= 1;
         self.rsl.unsafe_get(self.cnt)
+    }
+
+    fn fill_vec(&mut self, v: &mut [u32]) {
+        let len = v.len();
+        let mut v: &mut [u64] = unsafe { cast::transmute(v) };
+
+        for v.each_mut |elem| {
+            *elem = self.next64();
+        }
+
+        if len & 1 == 1 {
+            let v: &mut [u32] = unsafe { cast::transmute(v) };
+            v[len - 1] = self.next32();
+        }
     }
 }

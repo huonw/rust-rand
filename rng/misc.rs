@@ -43,6 +43,20 @@ impl Rng for LFSR258 {
 
         z1 ^ z2 ^ z3 ^ z4 ^ z5
     }
+
+    fn fill_vec(&mut self, v: &mut [u32]) {
+        let len = v.len();
+        let mut v: &mut [u64] = unsafe { cast::transmute(v) };
+
+        for v.each_mut |elem| {
+            *elem = self.next64();
+        }
+
+        if len & 1 == 1 {
+            let v: &mut [u32] = unsafe { cast::transmute(v) };
+            v[len - 1] = self.next32();
+        }
+    }
 }
 
 pub struct WELL512 {
@@ -90,6 +104,12 @@ impl Rng for WELL512 {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
+    }
+
+    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
+        for v.each_mut |elem| {
+            *elem = self.next32();
+        }
     }
 }
 
@@ -139,5 +159,11 @@ impl Rng for CMWCRng {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
+    }
+
+    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
+        for v.each_mut |elem| {
+            *elem = self.next32();
+        }
     }
 }

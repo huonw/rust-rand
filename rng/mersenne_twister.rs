@@ -95,6 +95,12 @@ impl Rng for MT19937 {
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
     }
+
+    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
+        for v.each_mut |elem| {
+            *elem = self.next32();
+        }
+    }
 }
 
 static MT64_N: uint = 312;
@@ -187,5 +193,19 @@ impl Rng for MT19937_64 {
         x ^= (x << 17) & 0x71D67FFFEDA60000;
         x ^= (x << 37) & 0xFFF7EEE000000000;
         x ^ (x >> 43)
+    }
+
+    fn fill_vec(&mut self, v: &mut [u32]) {
+        let len = v.len();
+        let mut v: &mut [u64] = unsafe { cast::transmute(v) };
+
+        for v.each_mut |elem| {
+            *elem = self.next64();
+        }
+
+        if len & 1 == 1 {
+            let v: &mut [u32] = unsafe { cast::transmute(v) };
+            v[len - 1] = self.next32();
+        }
     }
 }

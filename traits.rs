@@ -9,6 +9,8 @@ pub trait Rng {
     /// Return the next random integer
     pub fn next32(&mut self) -> u32;
     pub fn next64(&mut self) -> u64;
+
+    pub fn fill_vec(&mut self, &mut [u32]);
 }
 
 impl Rand for int {
