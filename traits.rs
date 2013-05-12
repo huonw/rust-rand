@@ -352,7 +352,7 @@ pub trait RngUtil {
      * }
      * ~~~
      */
-    fn shuffle<T:Copy>(&mut self, values: &[T]) -> ~[T];
+    fn shuffle<T:Copy>(&mut self, values: ~[T]) -> ~[T];
     /**
      * Shuffle a mutable vec in place
      *
@@ -502,10 +502,9 @@ impl<R: Rng> RngUtil for R {
     }
 
     /// Shuffle a vec
-    fn shuffle<T:Copy>(&mut self, values: &[T]) -> ~[T] {
-        let mut m = vec::from_slice(values);
-        self.shuffle_mut(m);
-        m
+    fn shuffle<T:Copy>(&mut self, mut values: ~[T]) -> ~[T] {
+        self.shuffle_mut(values);
+        values
     }
 
     /// Shuffle a mutable vec in place
