@@ -1,4 +1,5 @@
 RUSTC=rustc
+RUSTFLAGS=--opt-level=3
 
 .PHONY: clean lib check test bench all
 
@@ -21,9 +22,9 @@ test: test-rand
 	./test-rand $(TESTNAME)
 
 test-rand: *.rs */*rs
-	$(RUSTC) --opt-level=3 --test mod.rs -o test-rand
+	$(RUSTC) $(RUSTFLAGS) --test mod.rs -o test-rand
 
 lib: librand*.so
 
 librand*.so: *.rs */*rs
-	$(RUSTC) --opt-level=3 mod.rs
+	$(RUSTC) $(RUSTFLAGS) mod.rs

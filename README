@@ -1,6 +1,25 @@
-In-progress rewrite of the random number library in Rust's stdlib. 
+In-progress rewrite of the random number library in Rust's stdlib.
 
 See https://github.com/mozilla/rust/wiki/Lib-rand for (some) info.
 
-Currently the architecture is a bit strange. Requires a recent 
+Currently the architecture is a bit strange. Requires a recent
 incoming build.
+
+# Building
+
+To build the shared library
+
+   make
+
+To run benchmarks,
+
+   make bench
+
+   make lib-bench
+   make ext-bench
+
+
+The first runs all benchmarks. The second runs the microbenchmarks in
+the code itself (i.e. the tests anontated with #[bench]), and the last
+runs the tests in ./bench/, specifically it compares the Rust
+implementations with other implementations (e.g. the upstream C ones).

@@ -1,9 +1,11 @@
+use std::vec;
+
 /// Create a new random seed.
 pub fn seed() -> ~[u8] {
-    use core::libc::size_t;
+    use std::libc::size_t;
     #[abi = "cdecl"]
     mod rustrt {
-        use core::libc::size_t;
+        use std::libc::size_t;
 
         pub extern {
             unsafe fn rand_seed_size() -> size_t;

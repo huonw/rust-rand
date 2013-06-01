@@ -1,4 +1,4 @@
-use core::util;
+use std::{int, str, uint, u64, u32, util, vec};
 
 pub trait Rand {
     fn rand<R: Rng>(rng: &mut R) -> Self;
@@ -11,6 +11,11 @@ pub trait Rng {
     pub fn next64(&mut self) -> u64;
 
     pub fn fill_vec(&mut self, &mut [u32]);
+
+    /*pub fn new(seed: Option<&[u8]>) -> Self;
+
+    pub fn seed_len() -> uint;
+    pub fn seed(&mut self, &[u8]);*/
 }
 
 impl Rand for int {
@@ -373,6 +378,8 @@ pub trait RngUtil {
      * ~~~
      */
     fn shuffle_mut<T>(&mut self, values: &mut [T]);
+
+    fn iter(self) -> super::RandIterator<Self>;
 }
 
 /// Extension methods for random number generators
@@ -516,5 +523,21 @@ impl<R: Rng> RngUtil for R {
             // lock element i in place.
             vec::swap(values, i, self.gen_uint_range(0u, i + 1u));
         }
+    }
+
+    fn iter(self) -> super::RandIterator<R> {
+        super::RandIterator::new(self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::iterator::IteratorUtil;
+
+    #[test]
+    fn test_iter() {
+        let mut rng = ::rng::StdRng::new().iter();
+
+        for rng.advance |_: uint| { break }
     }
 }

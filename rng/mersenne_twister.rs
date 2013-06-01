@@ -1,3 +1,4 @@
+use std::{cast, uint, cmp};
 use rng::rt::seed;
 use traits::Rng;
 
@@ -54,22 +55,24 @@ impl MT19937 {
         r
     }
 
-    //#[inline]
+    #[inline]
     fn generate_numbers(&mut self) {
-        for uint::range(0, MT_N - MT_M) |i| {
-            let y = (self.state.unsafe_get(i) & MT_HI) | (self.state.unsafe_get(i+1) & MT_LO);
-            let val = self.state.unsafe_get(i + MT_M) ^ (y >> 1) ^ ((y & 1) * MT_A);
-            self.state.unsafe_set(i, val);
-        }
-        for uint::range(MT_N - MT_M, MT_N - 1) |i| {
-            let y = (self.state.unsafe_get(i) & MT_HI) | (self.state.unsafe_get(i+1) & MT_LO);
-            let val = self.state.unsafe_get(i + MT_M - MT_N) ^ (y >> 1) ^ ((y & 1) * MT_A);
-            self.state.unsafe_set(i, val);
-        }
+        unsafe {
+            for uint::range(0, MT_N - MT_M) |i| {
+                let y = (self.state.unsafe_get(i) & MT_HI) | (self.state.unsafe_get(i+1) & MT_LO);
+                let val = self.state.unsafe_get(i + MT_M) ^ (y >> 1) ^ ((y & 1) * MT_A);
+                self.state.unsafe_set(i, val);
+            }
+            for uint::range(MT_N - MT_M, MT_N - 1) |i| {
+                let y = (self.state.unsafe_get(i) & MT_HI) | (self.state.unsafe_get(i+1) & MT_LO);
+                let val = self.state.unsafe_get(i + MT_M - MT_N) ^ (y >> 1) ^ ((y & 1) * MT_A);
+                self.state.unsafe_set(i, val);
+            }
 
-        let y = (self.state.unsafe_get(MT_N - 1) & MT_HI) | (self.state.unsafe_get(0) & MT_LO);
-        let val = self.state.unsafe_get(MT_M - 1) ^ (y >> 1) ^ ((y & 1) * MT_A);
-        self.state.unsafe_set(MT_N - 1, val);
+            let y = (self.state.unsafe_get(MT_N - 1) & MT_HI) | (self.state.unsafe_get(0) & MT_LO);
+            let val = self.state.unsafe_get(MT_M - 1) ^ (y >> 1) ^ ((y & 1) * MT_A);
+            self.state.unsafe_set(MT_N - 1, val);
+        }
     }
 }
 
@@ -82,7 +85,7 @@ impl Rng for MT19937 {
             self.index = 0;
         }
 
-        let mut y = self.state.unsafe_get(self.index);
+        let mut y = unsafe { self.state.unsafe_get(self.index) };
         self.index += 1;
 
         y ^= y >> 11;
@@ -155,22 +158,25 @@ impl MT19937_64 {
         r
     }
 
-    //#[inline]
+    #[inline]
     fn generate_numbers(&mut self) {
-        for uint::range(0, MT64_N - MT64_M) |i| {
-            let x = (self.state.unsafe_get(i) & MT64_HI) | (self.state.unsafe_get(i+1) & MT64_LO);
-            let val = self.state.unsafe_get(i + MT64_M) ^ (x >> 1) ^ ((x & 1) * MT64_A);
-            self.state.unsafe_set(i, val);
-        }
-        for uint::range(MT64_N - MT64_M, MT64_N - 1) |i| {
-            let x = (self.state.unsafe_get(i) & MT64_HI) | (self.state.unsafe_get(i+1) & MT64_LO);
-            let val = self.state.unsafe_get(i + MT64_M - MT64_N) ^ (x >> 1) ^ ((x & 1) * MT64_A);
-            self.state.unsafe_set(i, val);
-        }
+        unsafe {
+            for uint::range(0, MT64_N - MT64_M) |i| {
+                let x = (self.state.unsafe_get(i) & MT64_HI) | (self.state.unsafe_get(i+1) & MT64_LO);
+                let val = self.state.unsafe_get(i + MT64_M) ^ (x >> 1) ^ ((x & 1) * MT64_A);
+                self.state.unsafe_set(i, val);
+            }
+            for uint::range(MT64_N - MT64_M, MT64_N - 1) |i| {
+                let x = (self.state.unsafe_get(i) & MT64_HI) | (self.state.unsafe_get(i+1) & MT64_LO);
+                let val = self.state.unsafe_get(i + MT64_M - MT64_N) ^ (x >> 1) ^ ((x & 1) * MT64_A);
+                self.state.unsafe_set(i, val);
+            }
 
-        let x = (self.state.unsafe_get(MT64_N - 1) & MT64_HI) | (self.state.unsafe_get(0) & MT64_LO);
-        let val = self.state.unsafe_get(MT64_M - 1) ^ (x >> 1) ^ ((x & 1) * MT64_A);
-        self.state.unsafe_set(MT64_N - 1, val);
+            let x = (self.state.unsafe_get(MT64_N - 1) & MT64_HI) |
+                (self.state.unsafe_get(0) & MT64_LO);
+            let val = self.state.unsafe_get(MT64_M - 1) ^ (x >> 1) ^ ((x & 1) * MT64_A);
+            self.state.unsafe_set(MT64_N - 1, val);
+        }
     }
 }
 
@@ -206,6 +212,63 @@ impl Rng for MT19937_64 {
         if len & 1 == 1 {
             let v: &mut [u32] = unsafe { cast::transmute(v) };
             v[len - 1] = self.next32();
+        }
+    }
+}
+
+
+pub struct WELL512 {
+    priv state: [u32, .. 16],
+    priv index: uint
+}
+
+impl WELL512 {
+    pub fn new() -> WELL512 {
+        let mut r = WELL512 {
+            state: [0, .. 16],
+            index: 0
+        };
+        let seed: ~[u32] = unsafe { cast::transmute(seed()) };
+        for uint::range(0, cmp::min(16, seed.len())) |i| {
+            r.state[i] = seed[i];
+        }
+        r
+    }
+}
+
+impl Rng for WELL512 {
+    #[inline]
+    fn next32(&mut self) -> u32 {
+        let mut a, c;
+        let b, d;
+        let index = self.index;
+        unsafe {
+            a = self.state.unsafe_get(index);
+            c = self.state.unsafe_get((index + 13) & 15);
+            b = a ^ c ^ (a << 16) ^ (c << 15);
+            c = self.state.unsafe_get((index + 9) & 15);
+            c ^= (c >> 11);
+            a = b ^ c;
+            self.state.unsafe_set(index, a);
+            d = a ^ ((a << 5) & 0xDA442D24);
+            let index = (index + 15) & 15;
+            a = self.state.unsafe_get(index);
+
+            let val =  a ^ b ^ d ^ (a<<2) ^ (b<<18) ^ (c<<28);
+            self.state.unsafe_set(index, val);
+            self.index = index;
+            val
+        }
+    }
+
+    #[inline(always)]
+    pub fn next64(&mut self) -> u64 {
+        (self.next32() as u64 << 32) | self.next32() as u64
+    }
+
+    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
+        for v.each_mut |elem| {
+            *elem = self.next32();
         }
     }
 }

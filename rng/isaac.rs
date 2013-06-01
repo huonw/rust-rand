@@ -1,12 +1,16 @@
+#[allow(unused_unsafe)];
+
+use std::{cast, u64, uint, cmp, vec, sys};
 use traits::Rng;
 use rng::rt::seed;
+
 
 static RAND_SIZE_LEN: uint = 8;
 static RAND_SIZE: uint = 1 << RAND_SIZE_LEN;
 
 /// A random number generator that uses the [ISAAC
 /// algorithm](http://en.wikipedia.org/wiki/ISAAC_%28cipher%29).
-pub struct IsaacRng {
+pub struct Isaac {
     priv cnt: uint,
     priv rsl: [u32, .. RAND_SIZE],
     priv mem: [u32, .. RAND_SIZE],
@@ -15,10 +19,10 @@ pub struct IsaacRng {
     priv c: u32
 }
 
-pub impl IsaacRng {
+pub impl Isaac {
     /// Create an ISAAC random number generator with a random seed.
-    fn new() -> IsaacRng {
-        IsaacRng::new_seeded(seed())
+    fn new() -> Isaac {
+        Isaac::new_seeded(seed())
     }
 
     /// Create an ISAAC random number generator with a seed. This can be any
@@ -26,8 +30,8 @@ pub impl IsaacRng {
     /// will be silently ignored. A generator constructed with a given seed
     /// will generate the same sequence of values as all other generators
     /// constructed with the same seed.
-    fn new_seeded(seed: &[u8]) -> IsaacRng {
-        let mut rng = IsaacRng {
+    fn new_seeded(seed: &[u8]) -> Isaac {
+        let mut rng = Isaac {
             cnt: 0,
             rsl: [0, .. RAND_SIZE],
             mem: [0, .. RAND_SIZE],
@@ -46,8 +50,8 @@ pub impl IsaacRng {
 
     /// Create an ISAAC random number generator using the default
     /// fixed seed.
-    fn new_unseeded() -> IsaacRng {
-        let mut rng = IsaacRng {
+    fn new_unseeded() -> Isaac {
+        let mut rng = Isaac {
             cnt: 0,
             rsl: [0, .. RAND_SIZE],
             mem: [0, .. RAND_SIZE],
@@ -117,7 +121,7 @@ pub impl IsaacRng {
     }
 
     /// Refills the output buffer (`self.rsl`)
-    #[inline]
+    //#[inline]
     priv fn isaac(&mut self) {
         self.c += 1;
         // abbreviations
@@ -128,7 +132,9 @@ pub impl IsaacRng {
 
         static midpoint: uint =  RAND_SIZE / 2;
 
-        macro_rules! ind (($x:expr) => { self.mem.unsafe_get((($x >> 2) as uint & (RAND_SIZE - 1))) });
+        macro_rules! ind (($x:expr) => {
+            unsafe { self.mem.unsafe_get((($x >> 2) as uint & (RAND_SIZE - 1))) }
+        });
         macro_rules! rngstep(
             ($j:expr, $shift:expr) => {{
                 let base = base + $j;
@@ -138,13 +144,15 @@ pub impl IsaacRng {
                     a << $shift as uint
                 };
 
-                let x = self.mem.unsafe_get(base + mr_offset);
-                a = (a ^ mix) + self.mem.unsafe_get(base + m2_offset);
-                let y = ind!(x) + a + b;
-                self.mem.unsafe_set(base + mr_offset, y);
+                unsafe {
+                    let x = self.mem.unsafe_get(base + mr_offset);
+                    a = (a ^ mix) + self.mem.unsafe_get(base + m2_offset);
+                    let y = ind!(x) + a + b;
+                    self.mem.unsafe_set(base + mr_offset, y);
 
-                b = ind!(y >> RAND_SIZE_LEN) + x;
-                self.rsl.unsafe_set(base + mr_offset, b);
+                    b = ind!(y >> RAND_SIZE_LEN) + x;
+                    self.rsl.unsafe_set(base + mr_offset, b);
+                }
             }}
         );
 
@@ -163,7 +171,7 @@ pub impl IsaacRng {
     }
 }
 
-impl Rng for IsaacRng {
+impl Rng for Isaac {
     #[inline]
     fn next32(&mut self) -> u32 {
         if self.cnt == 0 {
@@ -171,7 +179,7 @@ impl Rng for IsaacRng {
             self.isaac();
         }
         self.cnt -= 1;
-        self.rsl.unsafe_get(self.cnt)
+        unsafe { self.rsl.unsafe_get(self.cnt) }
     }
 
     #[inline(always)]
@@ -191,7 +199,7 @@ static RAND_SIZE_64_LEN: uint = 8;
 static RAND_SIZE_64: uint = 1 << RAND_SIZE_64_LEN;
 
 
-pub struct Isaac64Rng {
+pub struct Isaac64 {
     priv cnt: uint,
     priv rsl: [u64, .. RAND_SIZE_64],
     priv mem: [u64, .. RAND_SIZE_64],
@@ -200,12 +208,12 @@ pub struct Isaac64Rng {
     priv c: u64,
 }
 
-pub impl Isaac64Rng {
-    fn new() -> Isaac64Rng {
-        Isaac64Rng::new_seeded(rand::seed())
+pub impl Isaac64 {
+    fn new() -> Isaac64 {
+        Isaac64::new_seeded(seed())
     }
-    fn new_seeded(seed: &[u8]) -> Isaac64Rng {
-        let mut rng = Isaac64Rng {
+    fn new_seeded(seed: &[u8]) -> Isaac64 {
+        let mut rng = Isaac64 {
             cnt: 0,
             rsl: [0, .. RAND_SIZE_64],
             mem: [0, .. RAND_SIZE_64],
@@ -221,8 +229,8 @@ pub impl Isaac64Rng {
         rng.init(true);
         rng
     }
-    fn new_unseeded() -> Isaac64Rng {
-        let mut rng = Isaac64Rng {
+    fn new_unseeded() -> Isaac64 {
+        let mut rng = Isaac64 {
             cnt: 0,
             rsl: [0, .. RAND_SIZE_64],
             mem: [0, .. RAND_SIZE_64],
@@ -294,11 +302,7 @@ pub impl Isaac64Rng {
 
         macro_rules! ind (
             ($x:expr) => {
-                unsafe {
-                    let bytes: &[u8, .. RAND_SIZE_64 * 8] = cast::transmute(&self.mem);
-                    let ptr = bytes.unsafe_ref(($x as uint & ((RAND_SIZE_64 - 1) << 3)));
-                    *cast::transmute::<*u8, *u64>(ptr)
-                }
+                unsafe { self.mem.unsafe_get(($x as uint >> 3) & (RAND_SIZE_64 - 1)) }
             }
         );
         macro_rules! rngstep(
@@ -315,13 +319,15 @@ pub impl Isaac64Rng {
                     mix
                 };
 
-                let x = self.mem.unsafe_get(base + mr_offset);
-                a = mix + self.mem.unsafe_get(base + m2_offset);
-                let y = ind!(x) + a + b;
-                self.mem.unsafe_set(base + mr_offset, y);
+                unsafe {
+                    let x = self.mem.unsafe_get(base + mr_offset);
+                    a = mix + self.mem.unsafe_get(base + m2_offset);
+                    let y = ind!(x) + a + b;
+                    self.mem.unsafe_set(base + mr_offset, y);
 
-                b = ind!(y >> RAND_SIZE_64_LEN) + x;
-                self.rsl.unsafe_set(base + mr_offset, b);
+                    b = ind!(y >> RAND_SIZE_64_LEN) + x;
+                    self.rsl.unsafe_set(base + mr_offset, b);
+                }
             }}
         );
 
@@ -340,7 +346,7 @@ pub impl Isaac64Rng {
     }
 }
 
-impl Rng for Isaac64Rng {
+impl Rng for Isaac64 {
     #[inline(always)]
     fn next32(&mut self) -> u32 {
         self.next64() as u32
@@ -352,7 +358,7 @@ impl Rng for Isaac64Rng {
             self.isaac64();
         }
         self.cnt -= 1;
-        self.rsl.unsafe_get(self.cnt)
+        unsafe { self.rsl.unsafe_get(self.cnt) }
     }
 
     fn fill_vec(&mut self, v: &mut [u32]) {

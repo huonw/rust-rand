@@ -1,3 +1,4 @@
+use std::cast;
 use traits::Rng;
 use rng::rt::seed;
 

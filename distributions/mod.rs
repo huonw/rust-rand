@@ -21,6 +21,7 @@
 // Generating Random Variables"], but more robust. If one wanted, one
 // could implement VIZIGNOR the ZIGNOR paper for more speed.
 
+use std::vec;
 use traits::{Rng,Rand,RngUtil};
 
 mod ziggurat_tables;
@@ -213,17 +214,17 @@ impl Rand for Exp1 {
 
 #[cfg(test)]
 mod bench {
-    extern mod std;
+    extern mod extra;
     use super::*;
     use rng;
 
     #[bench]
-    fn norm(b: &mut std::test::BenchHarness) {
+    fn norm(b: &mut extra::test::BenchHarness) {
         let mut sum = 0.0;
         let mut rng = rng::StdRng::new();
 
         do b.iter {
-            for 10000.times {
+            for 1000.times {
                 sum += *rng.gen::<StandardNormal>();
             }
         };
@@ -231,12 +232,12 @@ mod bench {
     }
 
     #[bench]
-    fn exp1(b: &mut std::test::BenchHarness) {
+    fn exp1(b: &mut extra::test::BenchHarness) {
         let mut sum = 0.0;
         let mut rng = rng::StdRng::new();
 
         do b.iter {
-            for 10000.times {
+            for 1000.times {
                 sum += *rng.gen::<Exp1>();
             }
         };
