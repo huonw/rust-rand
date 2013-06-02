@@ -1,4 +1,3 @@
-use std::cast;
 use traits::Rng;
 use rng::rt::seed;
 
@@ -13,11 +12,11 @@ macro_rules! step{
 pub struct LFSR258 {
     priv z1: u64, priv z2: u64, priv z3: u64, priv z4: u64, priv z5: u64
 }
-
+// TODO: seeds
 impl Rng for LFSR258 {
     fn new() -> LFSR258 {
-        let seed: ~[u64] = unsafe { cast::transmute(seed()) };
-         LFSR258 {
+        let seed = unsafe { seed(5) };
+        LFSR258 {
              z1: seed[0],
              z2: seed[1],
              z3: seed[2],
@@ -52,11 +51,12 @@ pub struct LFSR113 {
 
 impl Rng for LFSR113 {
     fn new() -> LFSR113 {
+        let seed = unsafe { seed(4) };
         LFSR113 {
-            z1: 1,
-            z2: 2,
-            z3: 3,
-            z4: 4
+            z1: seed[0],
+            z2: seed[1],
+            z3: seed[2],
+            z4: seed[3]
         }
     }
 
@@ -84,11 +84,12 @@ pub struct Taus88 {
 
 impl Rng for Taus88 {
      fn new() -> Taus88 { // TODO: seeds?
-        Taus88 {
-            s1: 1,
-            s2: 2,
-            s3: 3
-        }
+         let seed = unsafe { seed(3) };
+         Taus88 {
+             s1: seed[0],
+             s2: seed[1],
+             s3: seed[2]
+         }
     }
 
     #[inline]

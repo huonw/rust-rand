@@ -1,21 +1,13 @@
-use std::cast;
-use traits::Rng;
+use traits::{Rng, SeedableRng};
 use rng::rt::seed;
 
 pub struct MinStd_Rand {
     priv x: u32
 }
 
-impl MinStd_Rand {
-    pub fn new_seeded(s: u32) -> MinStd_Rand {
-        MinStd_Rand { x : s }
-    }
-}
-
 impl Rng for MinStd_Rand {
     fn new() -> MinStd_Rand {
-        let seed: ~[u32] = unsafe { cast::transmute(seed()) };
-        MinStd_Rand::new_seeded(seed[0])
+        SeedableRng::new_seeded(unsafe {seed(1)}[0])
     }
 
     #[inline]
@@ -30,19 +22,23 @@ impl Rng for MinStd_Rand {
     }
 }
 
+impl SeedableRng<u32> for MinStd_Rand {
+    fn reseed(&mut self, seed: u32) {
+        self.x = seed
+    }
+
+    fn new_seeded(seed: u32) -> MinStd_Rand {
+        MinStd_Rand { x: seed }
+    }
+}
+
 pub struct Rand48 {
     priv x: u32
-}
-impl Rand48 {
-    pub fn new_seeded(s: u32) -> Rand48 {
-        Rand48 { x : s }
-    }
 }
 
 impl Rng for Rand48 {
     fn new() -> Rand48 {
-        let seed: ~[u32] = unsafe { cast::transmute(seed()) };
-        Rand48::new_seeded(seed[0])
+        SeedableRng::new_seeded(unsafe {seed(1)}[0])
     }
 
     #[inline]
@@ -54,5 +50,15 @@ impl Rng for Rand48 {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
+    }
+}
+
+impl SeedableRng<u32> for Rand48 {
+    fn reseed(&mut self, seed: u32) {
+        self.x = seed
+    }
+
+    fn new_seeded(seed: u32) -> Rand48 {
+        Rand48 { x: seed }
     }
 }

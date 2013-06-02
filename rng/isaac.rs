@@ -1,7 +1,7 @@
 #[allow(unused_unsafe)];
 
-use std::{cast, u64, uint, cmp, vec, sys};
-use traits::Rng;
+use std::{u64, uint, vec, sys, ptr};
+use traits::{Rng, SeedableRng, VecSeedableRng};
 use rng::rt::seed;
 
 
@@ -20,29 +20,6 @@ pub struct Isaac {
 }
 
 pub impl Isaac {
-    /// Create an ISAAC random number generator with a seed. This can be any
-    /// length, although the maximum number of bytes used is 1024 and any more
-    /// will be silently ignored. A generator constructed with a given seed
-    /// will generate the same sequence of values as all other generators
-    /// constructed with the same seed.
-    fn new_seeded(seed: &[u8]) -> Isaac {
-        let mut rng = Isaac {
-            cnt: 0,
-            rsl: [0, .. RAND_SIZE],
-            mem: [0, .. RAND_SIZE],
-            a: 0, b: 0, c: 0
-        };
-
-        let array_size = sys::size_of_val(&rng.rsl);
-        let copy_length = cmp::min(array_size, seed.len());
-
-        // manually create a &mut [u8] slice of randrsl to copy into.
-        let dest = unsafe { cast::transmute((&mut rng.rsl, array_size)) };
-        vec::bytes::copy_memory(dest, seed, copy_length);
-        rng.init(true);
-        rng
-    }
-
     /// Create an ISAAC random number generator using the default
     /// fixed seed.
     fn new_unseeded() -> Isaac {
@@ -169,7 +146,7 @@ pub impl Isaac {
 impl Rng for Isaac {
     /// Create an ISAAC random number generator with a random seed.
     fn new() -> Isaac {
-        Isaac::new_seeded(seed())
+        VecSeedableRng::new_seeded_vec(unsafe { seed(RAND_SIZE) })
     }
 
     #[inline]
@@ -188,6 +165,60 @@ impl Rng for Isaac {
     }
 }
 
+impl SeedableRng<u32> for Isaac {
+    fn reseed(&mut self, seed: u32) {
+        // zero rsl
+        let rsl_ptr = unsafe { self.rsl.unsafe_mut_ref(0) };
+        unsafe {
+            ptr::set_memory(rsl_ptr, 0, sys::size_of_val(&self.rsl));
+        }
+
+        self.rsl[0] = seed;
+        self.init(true);
+    }
+
+    fn new_seeded(seed: u32) -> Isaac {
+        let mut rng = Isaac {
+            cnt: 0,
+            rsl: [0, .. RAND_SIZE],
+            mem: [0, .. RAND_SIZE],
+            a: 0, b: 0, c: 0
+        };
+
+        rng.rsl[0] = seed;
+        rng.init(true);
+        rng
+    }
+}
+
+impl VecSeedableRng<u32> for Isaac {
+    fn reseed_vec(&mut self, seed: &[u32]) {
+        for vec::eachi_mut(self.rsl) |i, rsl_elem| {
+            *rsl_elem = if i < seed.len() {seed[i]} else {0};
+        }
+
+        self.init(true);
+    }
+
+
+    /// Create an ISAAC random number generator with a seed. This can be any
+    /// length, although the maximum number of bytes used is 1024 and any more
+    /// will be silently ignored. A generator constructed with a given seed
+    /// will generate the same sequence of values as all other generators
+    /// constructed with the same seed.
+    fn new_seeded_vec(seed: &[u32]) -> Isaac {
+        let mut rng = Isaac {
+            cnt: 0,
+            rsl: [0, .. RAND_SIZE],
+            mem: [0, .. RAND_SIZE],
+            a: 0, b: 0, c: 0
+        };
+        rng.reseed_vec(seed);
+        rng
+    }
+
+    fn seed_vec_len() -> uint { RAND_SIZE }
+}
 
 static RAND_SIZE_64_LEN: uint = 8;
 static RAND_SIZE_64: uint = 1 << RAND_SIZE_64_LEN;
@@ -203,23 +234,6 @@ pub struct Isaac64 {
 }
 
 pub impl Isaac64 {
-    fn new_seeded(seed: &[u8]) -> Isaac64 {
-        let mut rng = Isaac64 {
-            cnt: 0,
-            rsl: [0, .. RAND_SIZE_64],
-            mem: [0, .. RAND_SIZE_64],
-            a: 0, b: 0, c: 0,
-        };
-
-        let array_size = sys::size_of_val(&rng.rsl);
-        let copy_length = cmp::min(array_size, seed.len());
-
-        // manually create a &mut [u8] slice of randrsl to copy into.
-        let dest = unsafe { cast::transmute((&rng.rsl, array_size)) };
-        vec::bytes::copy_memory(dest, seed, copy_length);
-        rng.init(true);
-        rng
-    }
     fn new_unseeded() -> Isaac64 {
         let mut rng = Isaac64 {
             cnt: 0,
@@ -339,7 +353,7 @@ pub impl Isaac64 {
 
 impl Rng for Isaac64 {
     fn new() -> Isaac64 {
-        Isaac64::new_seeded(seed())
+        VecSeedableRng::new_seeded_vec(unsafe { seed(RAND_SIZE_64) })
     }
 
     #[inline(always)]
@@ -355,4 +369,50 @@ impl Rng for Isaac64 {
         self.cnt -= 1;
         unsafe { self.rsl.unsafe_get(self.cnt) }
     }
+}
+
+impl SeedableRng<u64> for Isaac64 {
+    fn reseed(&mut self, seed: u64) {
+        // zero rsl
+        let rsl_ptr = unsafe { self.rsl.unsafe_mut_ref(0) };
+        unsafe {
+            ptr::set_memory(rsl_ptr, 0, sys::size_of_val(&self.rsl));
+        }
+
+        self.rsl[0] = seed;
+        self.init(true);
+        self.reseed_vec(&[seed])
+    }
+
+    fn new_seeded(seed: u64) -> Isaac64 {
+        VecSeedableRng::new_seeded_vec(&[seed])
+    }
+}
+
+impl VecSeedableRng<u64> for Isaac64 {
+    fn reseed_vec(&mut self, seed: &[u64]) {
+        for vec::eachi_mut(self.rsl) |i, rsl_elem| {
+            *rsl_elem = if i < seed.len() {seed[i]} else {0};
+        }
+
+        self.init(true);
+    }
+
+    /// Create an ISAAC random number generator with a seed. This can be any
+    /// length, although the maximum number of bytes used is 1024 and any more
+    /// will be silently ignored. A generator constructed with a given seed
+    /// will generate the same sequence of values as all other generators
+    /// constructed with the same seed.
+    fn new_seeded_vec(seed: &[u64]) -> Isaac64 {
+        let mut rng = Isaac64 {
+            cnt: 0,
+            rsl: [0, .. RAND_SIZE_64],
+            mem: [0, .. RAND_SIZE_64],
+            a: 0, b: 0, c: 0
+        };
+        rng.reseed_vec(seed);
+        rng
+    }
+
+    fn seed_vec_len() -> uint { RAND_SIZE_64 }
 }
