@@ -11,12 +11,6 @@ pub struct XorShift4 {
 }
 
 pub impl XorShift4 {
-    /// Create an xor shift random number generator with a default seed.
-    fn new() -> XorShift4 {
-        // constants taken from http://en.wikipedia.org/wiki/Xorshift
-        XorShift4::new_seeded(123456789u32, 362436069u32, 521288629u32, 88675123u32)
-    }
-
     /**
      * Create a random number generator using the specified seed. A generator
      * constructed with a given seed will generate the same sequence of values as
@@ -28,6 +22,12 @@ pub impl XorShift4 {
 }
 
 impl Rng for XorShift4 {
+    /// Create an xor shift random number generator with a default seed.
+    fn new() -> XorShift4 {
+        // constants taken from http://en.wikipedia.org/wiki/Xorshift
+        XorShift4::new_seeded(123456789u32, 362436069u32, 521288629u32, 88675123u32)
+    }
+
     #[inline]
     pub fn next32(&mut self) -> u32 {
         let x = self.x;
@@ -43,11 +43,5 @@ impl Rng for XorShift4 {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
-    }
-
-    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
-        for v.each_mut |elem| {
-            *elem = self.next32();
-        }
     }
 }

@@ -20,11 +20,6 @@ pub struct Isaac {
 }
 
 pub impl Isaac {
-    /// Create an ISAAC random number generator with a random seed.
-    fn new() -> Isaac {
-        Isaac::new_seeded(seed())
-    }
-
     /// Create an ISAAC random number generator with a seed. This can be any
     /// length, although the maximum number of bytes used is 1024 and any more
     /// will be silently ignored. A generator constructed with a given seed
@@ -172,6 +167,11 @@ pub impl Isaac {
 }
 
 impl Rng for Isaac {
+    /// Create an ISAAC random number generator with a random seed.
+    fn new() -> Isaac {
+        Isaac::new_seeded(seed())
+    }
+
     #[inline]
     fn next32(&mut self) -> u32 {
         if self.cnt == 0 {
@@ -185,12 +185,6 @@ impl Rng for Isaac {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
-    }
-
-    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
-        for v.each_mut |elem| {
-            *elem = self.next32();
-        }
     }
 }
 
@@ -209,9 +203,6 @@ pub struct Isaac64 {
 }
 
 pub impl Isaac64 {
-    fn new() -> Isaac64 {
-        Isaac64::new_seeded(seed())
-    }
     fn new_seeded(seed: &[u8]) -> Isaac64 {
         let mut rng = Isaac64 {
             cnt: 0,
@@ -347,6 +338,10 @@ pub impl Isaac64 {
 }
 
 impl Rng for Isaac64 {
+    fn new() -> Isaac64 {
+        Isaac64::new_seeded(seed())
+    }
+
     #[inline(always)]
     fn next32(&mut self) -> u32 {
         self.next64() as u32
@@ -359,19 +354,5 @@ impl Rng for Isaac64 {
         }
         self.cnt -= 1;
         unsafe { self.rsl.unsafe_get(self.cnt) }
-    }
-
-    fn fill_vec(&mut self, v: &mut [u32]) {
-        let len = v.len();
-        let mut v: &mut [u64] = unsafe { cast::transmute(v) };
-
-        for v.each_mut |elem| {
-            *elem = self.next64();
-        }
-
-        if len & 1 == 1 {
-            let v: &mut [u32] = unsafe { cast::transmute(v) };
-            v[len - 1] = self.next32();
-        }
     }
 }

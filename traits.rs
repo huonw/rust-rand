@@ -1,31 +1,62 @@
 use std::{int, str, uint, u64, u32, util, vec};
 
+/// Values that can be randomly generated.
 pub trait Rand {
+    /// Generated a random value with the given random number
+    /// generator.
     fn rand<R: Rng>(rng: &mut R) -> Self;
 }
 
-/// A random number generator
+/// A random number generator.
 pub trait Rng {
-    /// Return the next random integer
+    /// Create a new RNG, possibly with a system generated seed.
+    ///
+    /// This can, but is not guaranteed to, randomly seed the RNG,
+    /// since some RNGs only have good randomness properties for
+    /// certain initial seeds.
+    fn new() -> Self;
+
+    /// Return the next random u32.
     pub fn next32(&mut self) -> u32;
+    /// Return the next random u64.
     pub fn next64(&mut self) -> u64;
+}
 
-    pub fn fill_vec(&mut self, &mut [u32]);
+/// Random number generators that can be seeded with a scalar.
+pub trait SeedableRng<Seed>: Rng {
+    /// Reseed with the given seed.
+    pub fn reseed(&mut self, Seed);
 
-    /*pub fn new(seed: Option<&[u8]>) -> Self;
+    /// Create a new RNG with the given seed.
+    pub fn new_seeded(Seed) -> Self;
+}
 
-    pub fn seed_len() -> uint;
-    pub fn seed(&mut self, &[u8]);*/
+/// Random number generators that can be seeded with a vector.
+pub trait VecSeedableRng<Seed>: Rng {
+    /// Reseed with the given vector. The behaviour is undefined if
+    /// this vector is shorter than `self.seed_vec_len()`.
+    pub fn reseed_vec(&mut self, &[Seed]);
+
+    /// Create a new RNG with the given vector as a seed. The
+    /// behaviour is undefined if this vector is shorter than
+    /// `self.seed_vec_len()`.
+    pub fn new_seeded_vec(&[Seed]) -> Self;
+
+    /// The recommended length of a vector for seeding.
+    pub fn seed_vec_len() -> uint;
 }
 
 impl Rand for int {
     #[inline]
+    #[target_word_size=32]
     fn rand<R: Rng>(rng: &mut R) -> int {
-        if int::bits == 32 {
-            rng.next32() as int
-        } else {
-            rng.gen::<i64>() as int
-        }
+        rng.next32() as int
+    }
+
+    #[inline]
+    #[not(target_word_size=32)]
+    fn rand<R: Rng>(rng: &mut R) -> int {
+        rng.next64() as int
     }
 }
 
@@ -59,12 +90,15 @@ impl Rand for i64 {
 
 impl Rand for uint {
     #[inline]
+    #[target_word_size=32]
     fn rand<R: Rng>(rng: &mut R) -> uint {
-        if uint::bits == 32 {
-            rng.next32() as uint
-        } else {
-            rng.gen::<u64>() as uint
-        }
+        rng.next32() as uint
+    }
+
+    #[inline]
+    #[not(target_word_size=32)]
+    fn rand<R: Rng>(rng: &mut R) -> uint {
+        rng.next64() as uint
     }
 }
 
@@ -379,6 +413,7 @@ pub trait RngUtil {
      */
     fn shuffle_mut<T>(&mut self, values: &mut [T]);
 
+    /// Create an iterator of random values.
     fn iter(self) -> super::RandIterator<Self>;
 }
 
@@ -525,6 +560,7 @@ impl<R: Rng> RngUtil for R {
         }
     }
 
+    /// Create an iterator of random values.
     fn iter(self) -> super::RandIterator<R> {
         super::RandIterator::new(self)
     }
@@ -536,7 +572,7 @@ mod tests {
 
     #[test]
     fn test_iter() {
-        let mut rng = ::rng::StdRng::new().iter();
+        let mut rng = ::Rng::new::<::rng::StdRng>().iter();
 
         for rng.advance |_: uint| { break }
     }

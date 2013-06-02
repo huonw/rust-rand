@@ -74,7 +74,7 @@ fn str_to_rng<R: Runner>(name: &str, r: R) {
         ($($name:ident: $bits:expr),*) => {
             $(if name == stringify!($name) {
                 println(stringify!($name));
-                let __rng = $name::new();
+                let __rng: $name = Rng::new();
                 r.run(__rng, $bits);
             } else)*
                 {

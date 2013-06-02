@@ -221,7 +221,7 @@ mod bench {
     #[bench]
     fn norm(b: &mut extra::test::BenchHarness) {
         let mut sum = 0.0;
-        let mut rng = rng::StdRng::new();
+        let mut rng: rng::StdRng = ::Rng::new();
 
         do b.iter {
             for 1000.times {
@@ -234,7 +234,7 @@ mod bench {
     #[bench]
     fn exp1(b: &mut extra::test::BenchHarness) {
         let mut sum = 0.0;
-        let mut rng = rng::StdRng::new();
+        let mut rng: rng::StdRng = ::Rng::new();
 
         do b.iter {
             for 1000.times {

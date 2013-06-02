@@ -36,7 +36,7 @@ pub fn task_rng() -> @mut rng::StdRng {
     }
     match r {
         None => {
-            let rng = @@mut rng::StdRng::new();
+            let rng = @@mut Rng::new();
             unsafe {
                 local_data::local_data_set(tls_rng_state, rng);
             }
@@ -50,8 +50,10 @@ pub fn random<R: Rand>() -> R {
     (*task_rng()).gen()
 }
 
+
+/// A stream of random values.
 struct RandIterator<R> {
-    priv rng: R
+    rng: R
 }
 
 impl<R:Rng> RandIterator<R> {

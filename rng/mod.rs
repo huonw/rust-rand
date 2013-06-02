@@ -16,28 +16,17 @@ pub mod lfsr;
 pub mod rt;
 
 #[cfg(not(target_word_size="64"))]
-struct StdRng { priv rng: Isaac }
-
-#[cfg(not(target_word_size="64"))]
-impl StdRng {
-    pub fn new() -> StdRng {
-        StdRng { rng: Isaac::new() }
-    }
-}
-
+pub struct StdRng { priv rng: Isaac }
 
 #[cfg(target_word_size="64")]
-struct StdRng { priv rng: Isaac64 }
-
-#[cfg(target_word_size="64")]
-impl StdRng {
-    pub fn new() -> StdRng {
-        StdRng { rng: Isaac64::new() }
-    }
-}
+pub struct StdRng { priv rng: Isaac64 }
 
 
 impl Rng for StdRng {
+    fn new() -> StdRng {
+        StdRng { rng: Rng::new() }
+    }
+
     #[inline(always)]
     fn next32(&mut self) -> u32 {
         self.rng.next32()
@@ -46,10 +35,6 @@ impl Rng for StdRng {
     fn next64(&mut self) -> u64 {
         self.rng.next64()
     }
-    #[inline(always)]
-    fn fill_vec(&mut self, v: &mut [u32]) {
-        self.rng.fill_vec(v)
-    }
 }
 
 #[cfg(test)]
@@ -57,8 +42,8 @@ mod bench {
     extern mod extra;
     use std::num::Zero;
     macro_rules! bench_rng {
-        (ctor: $rng:expr, $ty:ty) => {{
-            let mut rng = $rng;
+        (ctor: $rng:ident, $ty:ty) => {{
+            let mut rng: $rng = ::Rng::new();
             let mut sum: $ty = Zero::zero();
 
             do b.iter {
@@ -71,7 +56,7 @@ mod bench {
                 return ();
             }
         }};
-        ($rng:ident, $ty:ty) => { bench_rng!(ctor: $rng::new(), $ty) };
+        ($rng:ident, $ty:ty) => { bench_rng!(ctor: $rng, $ty) };
 
         ($rng:ident) => {
             mod $rng {
@@ -94,15 +79,6 @@ mod bench {
                 #[bench]
                 fn f64(b: &mut extra::test::BenchHarness) {
                     bench_rng!($rng, f64)
-                }
-
-                #[bench]
-                fn fill(b: &mut extra::test::BenchHarness) {
-                    let mut rng = $rng::new();
-                    let mut vec = ~[0u32, .. 1024];
-                    do b.iter {
-                        rng.fill_vec(vec);
-                    }
                 }
             }
         }

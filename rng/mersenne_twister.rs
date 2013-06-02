@@ -14,10 +14,6 @@ pub struct MT19937 {
 }
 
 impl MT19937 {
-    pub fn new() -> MT19937 {
-        let seed: ~[u32] = unsafe { cast::transmute(seed()) };
-        MT19937::new_seeded_array(seed)
-    }
     pub fn new_seeded(seed: u32) -> MT19937 {
         let mut r = MT19937 { state: [0, .. MT_N], index: MT_N };
         r.state[0] = seed;
@@ -78,6 +74,11 @@ impl MT19937 {
 
 
 impl Rng for MT19937 {
+    pub fn new() -> MT19937 {
+        let seed: ~[u32] = unsafe { cast::transmute(seed()) };
+        MT19937::new_seeded_array(seed)
+    }
+
     #[inline]
     pub fn next32(&mut self) -> u32 {
         if self.index >= MT_N {
@@ -98,12 +99,6 @@ impl Rng for MT19937 {
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
     }
-
-    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
-        for v.each_mut |elem| {
-            *elem = self.next32();
-        }
-    }
 }
 
 static MT64_N: uint = 312;
@@ -118,10 +113,6 @@ pub struct MT19937_64 {
 }
 
 impl MT19937_64 {
-     pub fn new() -> MT19937_64 {
-        let seed: ~[u64] = unsafe { cast::transmute(seed()) };
-        MT19937_64::new_seeded_array(seed)
-    }
     pub fn new_seeded(seed: u64) -> MT19937_64 {
         let mut r = MT19937_64 { state: [0, .. MT64_N], index: MT64_N };
         r.state[0] = seed;
@@ -181,6 +172,11 @@ impl MT19937_64 {
 }
 
 impl Rng for MT19937_64 {
+    fn new() -> MT19937_64 {
+        let seed: ~[u64] = unsafe { cast::transmute(seed()) };
+        MT19937_64::new_seeded_array(seed)
+    }
+
     #[inline(always)]
     fn next32(&mut self) -> u32 {
         self.next64() as u32
@@ -200,20 +196,6 @@ impl Rng for MT19937_64 {
         x ^= (x << 37) & 0xFFF7EEE000000000;
         x ^ (x >> 43)
     }
-
-    fn fill_vec(&mut self, v: &mut [u32]) {
-        let len = v.len();
-        let mut v: &mut [u64] = unsafe { cast::transmute(v) };
-
-        for v.each_mut |elem| {
-            *elem = self.next64();
-        }
-
-        if len & 1 == 1 {
-            let v: &mut [u32] = unsafe { cast::transmute(v) };
-            v[len - 1] = self.next32();
-        }
-    }
 }
 
 
@@ -222,8 +204,8 @@ pub struct WELL512 {
     priv index: uint
 }
 
-impl WELL512 {
-    pub fn new() -> WELL512 {
+impl Rng for WELL512 {
+    fn new() -> WELL512 {
         let mut r = WELL512 {
             state: [0, .. 16],
             index: 0
@@ -234,9 +216,7 @@ impl WELL512 {
         }
         r
     }
-}
 
-impl Rng for WELL512 {
     #[inline]
     fn next32(&mut self) -> u32 {
         let mut a, c;
@@ -264,11 +244,5 @@ impl Rng for WELL512 {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
-    }
-
-    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
-        for v.each_mut |elem| {
-            *elem = self.next32();
-        }
     }
 }

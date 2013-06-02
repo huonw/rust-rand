@@ -13,20 +13,19 @@ macro_rules! step{
 pub struct LFSR258 {
     priv z1: u64, priv z2: u64, priv z3: u64, priv z4: u64, priv z5: u64
 }
-impl LFSR258 {
-    pub fn new() -> LFSR258 {
-        let seed: ~[u64] = unsafe { cast::transmute(seed()) };
-        LFSR258 {
-            z1: seed[0],
-            z2: seed[1],
-            z3: seed[2],
-            z4: seed[3],
-            z5: seed[4]
-        }
-    }
-}
 
 impl Rng for LFSR258 {
+    fn new() -> LFSR258 {
+        let seed: ~[u64] = unsafe { cast::transmute(seed()) };
+         LFSR258 {
+             z1: seed[0],
+             z2: seed[1],
+             z3: seed[2],
+             z4: seed[3],
+             z5: seed[4]
+         }
+     }
+
     #[inline(always)]
     fn next32(&mut self) -> u32 {
         self.next64() as u32
@@ -41,20 +40,6 @@ impl Rng for LFSR258 {
 
         self.z1 ^ self.z2 ^ self.z3 ^ self.z4 ^ self.z5
     }
-
-    fn fill_vec(&mut self, v: &mut [u32]) {
-        let len = v.len();
-        let mut v: &mut [u64] = unsafe { cast::transmute(v) };
-
-        for v.each_mut |elem| {
-            *elem = self.next64();
-        }
-
-        if len & 1 == 1 {
-            let v: &mut [u32] = unsafe { cast::transmute(v) };
-            v[len - 1] = self.next32();
-        }
-    }
 }
 
 
@@ -65,8 +50,8 @@ pub struct LFSR113 {
     priv z4: u32
 }
 
-impl LFSR113 {
-    pub fn new() -> LFSR113 {
+impl Rng for LFSR113 {
+    fn new() -> LFSR113 {
         LFSR113 {
             z1: 1,
             z2: 2,
@@ -74,9 +59,7 @@ impl LFSR113 {
             z4: 4
         }
     }
-}
 
-impl Rng for LFSR113 {
     #[inline]
     fn next32(&mut self) -> u32 {
         step!(self.z1,  6, 13, 4294967294, 18);
@@ -91,12 +74,6 @@ impl Rng for LFSR113 {
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
     }
-
-    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
-        for v.each_mut |elem| {
-            *elem = self.next32();
-        }
-    }
 }
 
 pub struct Taus88 {
@@ -105,17 +82,15 @@ pub struct Taus88 {
     priv s3: u32
 }
 
-impl Taus88 {
-    pub fn new() -> Taus88 {
+impl Rng for Taus88 {
+     fn new() -> Taus88 { // TODO: seeds?
         Taus88 {
             s1: 1,
             s2: 2,
             s3: 3
         }
     }
-}
 
-impl Rng for Taus88 {
     #[inline]
     fn next32(&mut self) -> u32 {
         step!(self.s1, 13, 19, 4294967294, 12);
@@ -128,11 +103,5 @@ impl Rng for Taus88 {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
-    }
-
-    pub fn fill_vec(&mut self, mut v: &mut [u32]) {
-        for v.each_mut |elem| {
-            *elem = self.next32();
-        }
     }
 }
