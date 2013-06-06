@@ -1,7 +1,7 @@
 #[allow(unused_unsafe)];
 
-use std::{u64, uint, vec, sys, ptr};
-use traits::{Rng, SeedableRng, VecSeedableRng};
+use std::{u64, uint, vec};
+use traits::{Rng, SeedableRng};
 use rng::rt::seed;
 
 
@@ -344,7 +344,7 @@ pub impl Isaac64 {
 
 impl Rng for Isaac64 {
     fn new() -> Isaac64 {
-        VecSeedableRng::new_seeded_vec(unsafe { seed(RAND_SIZE_64) })
+        SeedableRng::new_seeded::<&[u64], Isaac64>(unsafe { seed(RAND_SIZE_64) })
     }
 
     #[inline(always)]
@@ -362,31 +362,27 @@ impl Rng for Isaac64 {
     }
 }
 
-impl SeedableRng<u64> for Isaac64 {
-    fn reseed(&mut self, seed: u64) {
-        // zero rsl
-        let rsl_ptr = unsafe { self.rsl.unsafe_mut_ref(0) };
-        unsafe {
-            ptr::set_memory(rsl_ptr, 0, sys::size_of_val(&self.rsl));
+trait Isaac64Seed {
+    fn reseed(&self, &mut Isaac64);
+}
+impl Isaac64Seed for u64 {
+    fn reseed(&self, rng: &mut Isaac64) {
+        rng.reseed(&[*self])
+    }
+}
+impl<'self> Isaac64Seed for &'self [u64] {
+    fn reseed(&self, rng: &mut Isaac64) {
+        for vec::eachi_mut(rng.rsl) |i, rsl_elem| {
+            *rsl_elem = if i < self.len() {(*self)[i]} else {0};
         }
 
-        self.rsl[0] = seed;
-        self.init(true);
-        self.reseed_vec(&[seed])
-    }
-
-    fn new_seeded(seed: u64) -> Isaac64 {
-        VecSeedableRng::new_seeded_vec(&[seed])
+        rng.init(true);
     }
 }
 
-impl VecSeedableRng<u64> for Isaac64 {
-    fn reseed_vec(&mut self, seed: &[u64]) {
-        for vec::eachi_mut(self.rsl) |i, rsl_elem| {
-            *rsl_elem = if i < seed.len() {seed[i]} else {0};
-        }
-
-        self.init(true);
+impl<Seed: Isaac64Seed> SeedableRng<Seed> for Isaac64 {
+    fn reseed(&mut self, seed: Seed) {
+        seed.reseed(self)
     }
 
     /// Create an ISAAC random number generator with a seed. This can be any
@@ -394,16 +390,14 @@ impl VecSeedableRng<u64> for Isaac64 {
     /// will be silently ignored. A generator constructed with a given seed
     /// will generate the same sequence of values as all other generators
     /// constructed with the same seed.
-    fn new_seeded_vec(seed: &[u64]) -> Isaac64 {
+    fn new_seeded(seed: Seed) -> Isaac64 {
         let mut rng = Isaac64 {
             cnt: 0,
             rsl: [0, .. RAND_SIZE_64],
             mem: [0, .. RAND_SIZE_64],
-            a: 0, b: 0, c: 0
+            a: 0, b: 0, c: 0,
         };
-        rng.reseed_vec(seed);
+        seed.reseed(&mut rng);
         rng
     }
-
-    fn seed_vec_len() -> uint { RAND_SIZE_64 }
 }
