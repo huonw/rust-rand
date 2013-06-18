@@ -1,4 +1,5 @@
-use traits::Rng;
+use traits::{Rng,SeedableRng};
+use std::cast;
 pub use self::xorshift::*;
 pub use self::mersenne_twister::*;
 pub use self::isaac::*;
@@ -34,6 +35,42 @@ impl Rng for StdRng {
     #[inline(always)]
     fn next64(&mut self) -> u64 {
         self.rng.next64()
+    }
+}
+
+pub trait StdSeed {
+    fn reseed(&self, &mut StdRng);
+}
+impl StdSeed for uint {
+    #[cfg(not(target_word_size="64"))]
+    fn reseed(&self, rng: &mut StdRng) {
+        rng.rng.reseed(*self as u32)
+    }
+    #[cfg(target_word_size="64")]
+    fn reseed(&self, rng: &mut StdRng) {
+        rng.rng.reseed(*self as u64)
+    }
+}
+impl<'self, Self> StdSeed for &'self [uint] {
+    #[cfg(not(target_word_size="64"))]
+    fn reseed(&self, rng: &mut StdRng) {
+        let seed: &[u32] = unsafe {cast::transmute(*self)};
+        rng.rng.reseed(seed)
+    }
+    #[cfg(target_word_size="64")]
+    fn reseed(&self, rng: &mut StdRng) {
+        let seed: &[u64] = unsafe {cast::transmute(*self)};
+        rng.rng.reseed(seed);
+    }
+}
+
+impl<Seed: StdSeed> SeedableRng<Seed> for StdRng {
+    fn reseed(&mut self, seed: Seed) { seed.reseed(self) }
+    fn new_seeded(seed: Seed) -> StdRng {
+        let mut rng = StdRng {
+            rng: unsafe {::std::unstable::intrinsics::uninit()} };
+        rng.reseed(seed);
+        rng
     }
 }
 

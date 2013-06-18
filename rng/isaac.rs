@@ -1,6 +1,6 @@
 #[allow(unused_unsafe)];
 
-use std::{u64, uint, vec};
+use std::{u64, uint};
 use traits::{Rng, SeedableRng};
 use rng::rt::seed;
 
@@ -19,10 +19,10 @@ pub struct Isaac {
     priv c: u32
 }
 
-pub impl Isaac {
+impl Isaac {
     /// Create an ISAAC random number generator using the default
     /// fixed seed.
-    fn new_unseeded() -> Isaac {
+    pub fn new_unseeded() -> Isaac {
         let mut rng = Isaac {
             cnt: 0,
             rsl: [0, .. RAND_SIZE],
@@ -37,13 +37,13 @@ pub impl Isaac {
     /// of `rsl` as a seed, otherwise construct one algorithmically (not
     /// randomly).
     priv fn init(&mut self, use_rsl: bool) {
-        macro_rules! init_mut_many (
-            ($( $var:ident ),* = $val:expr ) => {
-                let mut $( $var = $val ),*;
-            }
+        macro_rules! init (
+            ($var:ident) => (
+                let mut $var = 0x9e3779b9;
+            )
         );
-        init_mut_many!(a, b, c, d, e, f, g, h = 0x9e3779b9);
-
+        init!(a); init!(b); init!(c); init!(d);
+        init!(e); init!(f); init!(g); init!(h);
 
         macro_rules! mix(
             () => {{
@@ -97,7 +97,8 @@ pub impl Isaac {
     priv fn isaac(&mut self) {
         self.c += 1;
         // abbreviations
-        let mut a = self.a, b = self.b + self.c;
+        let mut a = self.a;
+        let mut b = self.b + self.c;
         /*let mem = &mut self.mem;
         let rsl = &mut self.rsl;*/
 
@@ -183,7 +184,7 @@ impl<'self> IsaacSeed for &'self [u32] {
     /// will generate the same sequence of values as all other generators
     /// constructed with the same seed.
     fn reseed(&self, rng: &mut Isaac) {
-        for vec::eachi_mut(rng.rsl) |i, rsl_elem| {
+        for rng.rsl.mut_iter().enumerate().advance |(i, rsl_elem)| {
             *rsl_elem = if i < self.len() {self[i]} else {0};
         }
 
@@ -224,8 +225,8 @@ pub struct Isaac64 {
     priv c: u64,
 }
 
-pub impl Isaac64 {
-    fn new_unseeded() -> Isaac64 {
+impl Isaac64 {
+    pub fn new_unseeded() -> Isaac64 {
         let mut rng = Isaac64 {
             cnt: 0,
             rsl: [0, .. RAND_SIZE_64],
@@ -237,13 +238,13 @@ pub impl Isaac64 {
     }
 
     priv fn init(&mut self, use_rsl: bool) {
-        macro_rules! init_mut_many (
-            ($( $var:ident ),* = $val:expr ) => {
-                let mut $( $var = $val ),*;
-            }
+        macro_rules! init (
+            ($var:ident) => (
+                let mut $var = 0x9e3779b97f4a7c13;
+            )
         );
-        init_mut_many!(a, b, c, d, e, f, g, h = 0x9e3779b97f4a7c13);
-
+        init!(a); init!(b); init!(c); init!(d);
+        init!(e); init!(f); init!(g); init!(h);
 
         macro_rules! mix(
             () => {{
@@ -293,7 +294,8 @@ pub impl Isaac64 {
     priv fn isaac64(&mut self) {
         self.c += 1;
         // abbreviations
-        let mut a = self.a, b = self.b + self.c;
+        let mut a = self.a;
+        let mut b = self.b + self.c;
         static midpoint: uint =  RAND_SIZE_64 / 2;
 
         macro_rules! ind (
@@ -372,8 +374,8 @@ impl Isaac64Seed for u64 {
 }
 impl<'self> Isaac64Seed for &'self [u64] {
     fn reseed(&self, rng: &mut Isaac64) {
-        for vec::eachi_mut(rng.rsl) |i, rsl_elem| {
-            *rsl_elem = if i < self.len() {(*self)[i]} else {0};
+        for rng.rsl.mut_iter().enumerate().advance |(i, rsl_elem)| {
+            *rsl_elem = if i < self.len() {self[i]} else {0};
         }
 
         rng.init(true);

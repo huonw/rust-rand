@@ -46,6 +46,10 @@ pub fn task_rng() -> @mut rng::StdRng {
     }
 }
 
+pub fn seed<Seed: ::rng::StdSeed>(seed: Seed) {
+    (*task_rng()).reseed(seed)
+}
+
 pub fn random<R: Rand>() -> R {
     (*task_rng()).gen()
 }

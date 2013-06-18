@@ -1,5 +1,6 @@
-use traits::Rng;
+use traits::{Rng, SeedableRng};
 use rng::rt::seed;
+use std::uint;
 
 macro_rules! step{
     ($thing:expr, $s1:expr, $s2:expr, $and:expr, $s3:expr) => {{
@@ -13,17 +14,20 @@ pub struct LFSR258 {
     priv z1: u64, priv z2: u64, priv z3: u64, priv z4: u64, priv z5: u64
 }
 // TODO: seeds
+
+/// Minimum values of the seeds of a LFSR258 generator
+static LFSR258_LIMITS: [u64, .. 5] = [1, 511, 4095, 131071, 8388607];
 impl Rng for LFSR258 {
     fn new() -> LFSR258 {
-        let seed = unsafe { seed(5) };
-        LFSR258 {
-             z1: seed[0],
-             z2: seed[1],
-             z3: seed[2],
-             z4: seed[3],
-             z5: seed[4]
-         }
-     }
+        let mut s = [0, .. 5];
+        let rand = unsafe { seed::<u64>(5) };
+        for uint::range(0, 5) |i| {
+            // force every seed value to be at least as large as the
+            // minimums, by zeroing the high bit and adding the minimum
+            s[i] = (rand[i] >> 1) + LFSR258_LIMITS[i];
+        }
+        SeedableRng::new_seeded(s)
+    }
 
     #[inline(always)]
     fn next32(&mut self) -> u32 {
@@ -40,6 +44,28 @@ impl Rng for LFSR258 {
         self.z1 ^ self.z2 ^ self.z3 ^ self.z4 ^ self.z5
     }
 }
+///  The initial seeds y1, y2, y3, y4, y5 MUST be larger than 1, 511,
+///  4095, 131071 and 8388607 respectively.
+impl SeedableRng<[u64, .. 5]> for LFSR258 {
+    fn reseed(&mut self, seed: [u64, .. 5]) {
+        for uint::range(0, 5) |i| {
+            assert!(seed[i] >= LFSR258_LIMITS[i],
+                    "LFSR258 requires seed number %u to be at least %? (recieved %?)",
+                    i, LFSR258_LIMITS[i], seed[i]);
+        }
+        self.z1 = seed[0];
+        self.z2 = seed[1];
+        self.z3 = seed[2];
+        self.z4 = seed[3];
+        self.z5 = seed[4];
+    }
+
+    fn new_seeded(seed: [u64, .. 5]) -> LFSR258 {
+        let mut rng = LFSR258 { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+        rng.reseed(seed);
+        rng
+    }
+}
 
 
 pub struct LFSR113 {
@@ -51,13 +77,8 @@ pub struct LFSR113 {
 
 impl Rng for LFSR113 {
     fn new() -> LFSR113 {
-        let seed = unsafe { seed(4) };
-        LFSR113 {
-            z1: seed[0],
-            z2: seed[1],
-            z3: seed[2],
-            z4: seed[3]
-        }
+        let seed = unsafe { seed::<u32>(4) };
+        SeedableRng::new_seeded([seed[0], seed[1], seed[2], seed[3]])
     }
 
     #[inline]
@@ -76,6 +97,24 @@ impl Rng for LFSR113 {
     }
 }
 
+impl SeedableRng<[u32, .. 4]> for LFSR113 {
+    fn reseed(&mut self, seed: [u32, .. 4]) {
+        self.z1 = seed[0];
+        self.z2 = seed[1];
+        self.z3 = seed[2];
+        self.z4 = seed[3];
+    }
+    fn new_seeded(seed: [u32, .. 4]) -> LFSR113 {
+        LFSR113 {
+            z1: seed[0],
+            z2: seed[1],
+            z3: seed[2],
+            z4: seed[3]
+        }
+    }
+}
+
+
 pub struct Taus88 {
     priv s1: u32,
     priv s2: u32,
@@ -84,12 +123,8 @@ pub struct Taus88 {
 
 impl Rng for Taus88 {
      fn new() -> Taus88 { // TODO: seeds?
-         let seed = unsafe { seed(3) };
-         Taus88 {
-             s1: seed[0],
-             s2: seed[1],
-             s3: seed[2]
-         }
+         let seed = unsafe { seed::<u32>(3) };
+         SeedableRng::new_seeded([seed[0], seed[1], seed[2]])
     }
 
     #[inline]
@@ -104,5 +139,20 @@ impl Rng for Taus88 {
     #[inline(always)]
     pub fn next64(&mut self) -> u64 {
         (self.next32() as u64 << 32) | self.next32() as u64
+    }
+}
+
+impl SeedableRng<[u32, .. 3]> for Taus88 {
+    fn reseed(&mut self, seed: [u32, .. 3]) {
+        self.s1 = seed[0];
+        self.s2 = seed[1];
+        self.s3 = seed[2];
+    }
+    fn new_seeded(seed: [u32, .. 3]) -> Taus88 {
+        Taus88 {
+             s1: seed[0],
+             s2: seed[1],
+             s3: seed[2]
+         }
     }
 }

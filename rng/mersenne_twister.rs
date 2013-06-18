@@ -1,6 +1,6 @@
 use std::{uint, cmp};
 use rng::rt::seed;
-use traits::{Rng, SeedableRng, VecSeedableRng};
+use traits::{Rng, SeedableRng};
 
 static MT_N: uint = 624;
 static MT_M: uint = 397;
@@ -40,7 +40,7 @@ impl MT19937 {
 
 impl Rng for MT19937 {
     pub fn new() -> MT19937 {
-        VecSeedableRng::new_seeded_vec(unsafe { seed(MT_N) })
+        SeedableRng::new_seeded::<&[u32], MT19937>(unsafe { seed(MT_N) })
     }
 
     #[inline]
@@ -64,59 +64,57 @@ impl Rng for MT19937 {
     }
 }
 
-impl SeedableRng<u32> for MT19937 {
-    fn reseed(&mut self, seed: u32) {
-        self.state[0] = seed;
+trait MT19937Seed { fn reseed(&self, &mut MT19937); }
+impl MT19937Seed for u32 {
+    fn reseed(&self, rng: &mut MT19937) {
+        rng.state[0] = *self;
         for uint::range(1, MT_N) |i| {
-            self.state[i] = 1812433253 * (self.state[i-1] ^ (self.state[i-1] >> 30)) + i as u32;
+            rng.state[i] = 1812433253 * (rng.state[i-1] ^ (rng.state[i-1] >> 30)) + i as u32;
         }
 
-        self.index = MT_N;
+        rng.index = MT_N;
     }
-    fn new_seeded(seed: u32) -> MT19937 {
+}
+impl<'self> MT19937Seed for &'self [u32] {
+    fn reseed(&self, rng: &mut MT19937) {
+        rng.reseed(19650218u32);
+
+        let len = self.len();
+        let lim = cmp::max(len, MT_N);
+
+        let mut i = 1;
+        let mut j = 0;
+        for lim.times {
+            let val = (rng.state[i] ^
+                       (1664525 * (rng.state[i-1] ^ (rng.state[i-1] >> 30)))) + (*self)[j] + j;
+            rng.state[i] = val;
+
+            i += 1;
+            j += 1;
+
+            if (i >= MT_N) { rng.state[0] = rng.state[MT_N - 1]; i = 1; }
+            if (j as uint >= len) { j = 0; }
+        }
+
+        for (MT_N - 1).times {
+            let val = (rng.state[i] ^
+                       (156608394 * (rng.state[i-1] ^ (rng.state[i-1] >> 30)))) - i as u32;
+            rng.state[i] = val;
+            i += 1;
+            if (i >= MT_N) { rng.state[0] = rng.state[MT_N - 1]; i = 1; }
+        }
+    }
+}
+impl<Seed: MT19937Seed> SeedableRng<Seed> for MT19937 {
+    fn reseed(&mut self, seed: Seed) {
+        seed.reseed(self)
+    }
+    fn new_seeded(seed: Seed) -> MT19937 {
         let mut r = MT19937 { state: [0, .. MT_N], index: 0 };
         r.reseed(seed);
         r
     }
 }
-
-impl VecSeedableRng<u32> for MT19937 {
-    fn reseed_vec(&mut self, seed: &[u32]) {
-        self.reseed(19650218);
-
-        let len = seed.len();
-        let lim = cmp::max(len, MT_N);
-
-        let mut i = 1, j = 0;
-        for lim.times {
-            let val = (self.state[i] ^
-                       (1664525 * (self.state[i-1] ^ (self.state[i-1] >> 30)))) + seed[j] + j;
-            self.state[i] = val;
-
-            i += 1;
-            j += 1;
-
-            if (i >= MT_N) { self.state[0] = self.state[MT_N - 1]; i = 1; }
-            if (j as uint >= len) { j = 0; }
-        }
-
-        for (MT_N - 1).times {
-            let val = (self.state[i] ^
-                       (156608394 * (self.state[i-1] ^ (self.state[i-1] >> 30)))) - i as u32;
-            self.state[i] = val;
-            i += 1;
-            if (i >= MT_N) { self.state[0] = self.state[MT_N - 1]; i = 1; }
-        }
-    }
-    fn new_seeded_vec(seed: &[u32]) -> MT19937 {
-        let mut r = MT19937 { state: [0, .. MT_N], index: 0 };
-        r.reseed_vec(seed);
-        r
-    }
-
-    fn seed_vec_len() -> uint { MT_N }
-}
-
 
 static MT64_N: uint = 312;
 static MT64_M: uint = 156;
@@ -156,7 +154,7 @@ impl MT19937_64 {
 
 impl Rng for MT19937_64 {
     fn new() -> MT19937_64 {
-        VecSeedableRng::new_seeded_vec(unsafe { seed(MT64_N) })
+        SeedableRng::new_seeded::<&[u64], MT19937_64>(unsafe { seed(MT64_N) })
     }
 
     #[inline(always)]
@@ -179,60 +177,63 @@ impl Rng for MT19937_64 {
     }
 }
 
-impl SeedableRng<u64> for MT19937_64 {
-    fn reseed(&mut self, seed: u64) {
-        self.state[0] = seed;
+trait MT19937_64Seed {
+    fn reseed(&self, &mut MT19937_64);
+}
+impl MT19937_64Seed for u64 {
+    fn reseed(&self, rng: &mut MT19937_64) {
+        rng.state[0] = *self;
         for uint::range(1, MT64_N) |i| {
-            self.state[i] = 6364136223846793005 *
-                (self.state[i-1] ^ (self.state[i-1] >> 62)) + i as u64;
+            rng.state[i] = 6364136223846793005 *
+                (rng.state[i-1] ^ (rng.state[i-1] >> 62)) + i as u64;
         }
 
-        self.index = MT64_N;
+        rng.index = MT64_N;
     }
-    fn new_seeded(seed: u64) -> MT19937_64 {
+}
+impl<'self> MT19937_64Seed for &'self [u64] {
+    fn reseed(&self, rng: &mut MT19937_64) {
+        rng.reseed(19650218u64);
+
+        let len = self.len();
+        let lim = cmp::max(len, MT64_N);
+        let mut i = 1;
+        let mut j = 0;
+        for lim.times {
+            let val = (rng.state[i] ^
+                       (3935559000370003845 * (rng.state[i-1] ^ (rng.state[i-1] >> 62)))) +
+                (*self)[j] + j;
+            rng.state[i] = val;
+
+            i += 1;
+            j += 1;
+
+            if (i >= MT64_N) { rng.state[0] = rng.state[MT64_N - 1]; i = 1; }
+            if (j as uint >= len) { j = 0; }
+        }
+
+        for (MT64_N - 1).times {
+            rng.state[i] = (rng.state[i] ^
+                             (2862933555777941757 * (rng.state[i-1] ^ (rng.state[i-1] >> 62))))
+                - i as u64;
+
+            i += 1;
+            if (i >= MT64_N) { rng.state[0] = rng.state[MT64_N - 1]; i = 1; }
+        }
+    }
+}
+
+impl<Seed: MT19937_64Seed> SeedableRng<Seed> for MT19937_64 {
+    fn reseed(&mut self, seed: Seed) {
+        seed.reseed(self)
+    }
+    fn new_seeded(seed: Seed) -> MT19937_64 {
         let mut r = MT19937_64 { state: [0, .. MT64_N], index: 0 };
         r.reseed(seed);
         r
     }
 }
 
-impl VecSeedableRng<u64> for MT19937_64 {
-    fn reseed_vec(&mut self, seed: &[u64]) {
-        self.reseed(19650218);
-
-        let len = seed.len();
-        let lim = cmp::max(len, MT64_N);
-        let mut i = 1, j = 0;
-        for lim.times {
-            let val = (self.state[i] ^
-                       (3935559000370003845 * (self.state[i-1] ^ (self.state[i-1] >> 62)))) +
-                seed[j] + j;
-            self.state[i] = val;
-
-            i += 1;
-            j += 1;
-
-            if (i >= MT64_N) { self.state[0] = self.state[MT64_N - 1]; i = 1; }
-            if (j as uint >= len) { j = 0; }
-        }
-
-        for (MT64_N - 1).times {
-            self.state[i] = (self.state[i] ^
-                             (2862933555777941757 * (self.state[i-1] ^ (self.state[i-1] >> 62))))
-                - i as u64;
-
-            i += 1;
-            if (i >= MT64_N) { self.state[0] = self.state[MT64_N - 1]; i = 1; }
-        }
-    }
-    fn new_seeded_vec(seed: &[u64]) -> MT19937_64 {
-        let mut r = MT19937_64 { state: [0, .. MT64_N], index: 0 };
-        r.reseed_vec(seed);
-        r
-    }
-
-    fn seed_vec_len() -> uint { MT64_N }
-}
 
 static WELL512_N: uint = 16;
 pub struct WELL512 {
@@ -242,13 +243,14 @@ pub struct WELL512 {
 
 impl Rng for WELL512 {
     fn new() -> WELL512 {
-        VecSeedableRng::new_seeded_vec(unsafe { seed(WELL512_N) })
+        SeedableRng::new_seeded::<&[u32], WELL512>(unsafe { seed(WELL512_N) })
     }
 
     #[inline]
     fn next32(&mut self) -> u32 {
-        let mut a, c;
-        let b, d;
+        let mut a;
+        let mut c;
+        let b; let d;
         let index = self.index;
         unsafe {
             a = self.state.unsafe_get(index);
@@ -275,22 +277,20 @@ impl Rng for WELL512 {
     }
 }
 
-impl VecSeedableRng<u32> for WELL512 {
-    fn reseed_vec(&mut self, seed: &[u32]) {
+impl<'self> SeedableRng<&'self [u32]> for WELL512 {
+    fn reseed(&mut self, seed: &[u32]) {
         for uint::range(0, cmp::min(WELL512_N, seed.len())) |i| {
             self.state[i] = seed[i];
         }
         self.index = 0;
     }
 
-    fn new_seeded_vec(seed: &[u32]) -> WELL512 {
+    fn new_seeded(seed: &[u32]) -> WELL512 {
         let mut r = WELL512 {
             state: [0, .. 16],
             index: 0
         };
-        r.reseed_vec(seed);
+        r.reseed(seed);
         r
     }
-
-    fn seed_vec_len() -> uint { WELL512_N }
 }

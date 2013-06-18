@@ -49,7 +49,7 @@ impl Runner for DumpRaw {
 
                 // -1 is approximately infinity
                 for self.megabytes.get_or_default(-1 as uint).times {
-                    for vec::each_mut(buffer) |elem| {
+                    for buffer.mut_iter().advance |elem| {
                         *elem = rng.gen();
                     }
 

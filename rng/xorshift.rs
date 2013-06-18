@@ -1,4 +1,4 @@
-use traits::{Rng, VecSeedableRng};
+use traits::{Rng, SeedableRng};
 
 /// An [Xorshift random number
 /// generator](http://en.wikipedia.org/wiki/Xorshift). Not suitable for
@@ -10,14 +10,11 @@ pub struct XorShift4 {
     priv w: u32,
 }
 
-pub impl XorShift4 {
-}
-
 impl Rng for XorShift4 {
     /// Create an xor shift random number generator with a default seed.
-    fn new() -> XorShift4 {
+    pub fn new() -> XorShift4 {
         // constants taken from http://en.wikipedia.org/wiki/Xorshift
-        VecSeedableRng::new_seeded_vec(&[123456789, 362436069, 521288629, 88675123])
+        SeedableRng::new_seeded([123456789, 362436069, 521288629, 88675123])
     }
 
     #[inline]
@@ -38,24 +35,24 @@ impl Rng for XorShift4 {
     }
 }
 
-impl VecSeedableRng<u32> for XorShift4 {
-    fn reseed_vec(&mut self, seed: &[u32]) {
-        assert!(seed.len() >= 4, "XorShift4 requires at least 4 numbers as a seed");
-        self.x = seed[0];
-        self.y = seed[1];
-        self.z = seed[2];
-        self.w = seed[3];
+impl SeedableRng<[u32, .. 4]> for XorShift4 {
+    fn reseed(&mut self, seed: [u32, .. 4]) {
+        match seed {
+            [x,y,z,w] => {
+                self.x = x; self.y = y;
+                self.z = z; self.w = w;
+            }
+            _ => fail!("impossible: vector of length 4 that doesn't have length 4'")
+        }
     }
     /**
      * Create a random number generator using the specified seed. A generator
      * constructed with a given seed will generate the same sequence of values as
      * all other generators constructed with the same seed.
      */
-    fn new_seeded_vec(seed: &[u32]) -> XorShift4 {
+    fn new_seeded(seed: [u32, .. 4]) -> XorShift4 {
         let mut r = XorShift4 { x: 0, y: 0, z: 0, w: 0 };
-        r.reseed_vec(seed);
+        r.reseed(seed);
         r
     }
-
-    fn seed_vec_len() -> uint { 4 }
 }
