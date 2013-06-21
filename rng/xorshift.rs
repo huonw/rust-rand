@@ -28,11 +28,6 @@ impl Rng for XorShift4 {
         self.w = w ^ (w >> 19) ^ (t ^ (t >> 8));
         self.w
     }
-
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
-    }
 }
 
 impl SeedableRng<[u32, .. 4]> for XorShift4 {

@@ -30,11 +30,11 @@ impl Rng for StdRng {
 
     #[inline(always)]
     fn next32(&mut self) -> u32 {
-        self.rng.next32()
+        0 //self.rng.next32()
     }
     #[inline(always)]
     fn next64(&mut self) -> u64 {
-        self.rng.next64()
+        0 //self.rng.next64()
     }
 }
 

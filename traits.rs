@@ -17,9 +17,15 @@ pub trait Rng {
     fn new() -> Self;
 
     /// Return the next random u32.
-    pub fn next32(&mut self) -> u32;
+    #[inline]
+    pub fn next32(&mut self) -> u32 {
+        self.next64() as u32
+    }
     /// Return the next random u64.
-    pub fn next64(&mut self) -> u64;
+    #[inline]
+    pub fn next64(&mut self) -> u64 {
+        self.next32() as u64 << 32 | self.next32() as u64
+    }
 }
 
 /// Random number generators that can be seeded with a scalar.
@@ -28,7 +34,7 @@ pub trait SeedableRng<Seed>: Rng {
     pub fn reseed(&mut self, Seed);
 
     /// Create a new RNG with the given seed.
-    pub fn new_seeded(Seed) -> Self;
+    pub fn new_seeded(seed: Seed) -> Self;
 }
 
 /// Random number generators that can be seeded with a vector.

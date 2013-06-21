@@ -57,11 +57,6 @@ impl Rng for MT19937 {
         y ^= (y << 15) & 0xefc60000;
         y ^ (y >> 18)
     }
-
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
-    }
 }
 
 trait MT19937Seed { fn reseed(&self, &mut MT19937); }
@@ -155,11 +150,6 @@ impl MT19937_64 {
 impl Rng for MT19937_64 {
     fn new() -> MT19937_64 {
         SeedableRng::new_seeded::<&[u64], MT19937_64>(unsafe { seed(MT64_N) })
-    }
-
-    #[inline(always)]
-    fn next32(&mut self) -> u32 {
-        self.next64() as u32
     }
 
     #[inline]
@@ -269,11 +259,6 @@ impl Rng for WELL512 {
             self.index = index;
             val
         }
-    }
-
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
     }
 }
 

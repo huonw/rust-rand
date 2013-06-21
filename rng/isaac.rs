@@ -161,11 +161,6 @@ impl Rng for Isaac {
         self.cnt -= 1;
         unsafe { self.rsl.unsafe_get(self.cnt) }
     }
-
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
-    }
 }
 
 trait IsaacSeed {
@@ -349,11 +344,7 @@ impl Rng for Isaac64 {
         SeedableRng::new_seeded::<&[u64], Isaac64>(unsafe { seed(RAND_SIZE_64) })
     }
 
-    #[inline(always)]
-    fn next32(&mut self) -> u32 {
-        self.next64() as u32
-    }
-    #[inline(always)]
+    #[inline]
     fn next64(&mut self) -> u64 {
         if self.cnt == 0 {
             // make some more numbers

@@ -16,10 +16,6 @@ impl Rng for MinStd_Rand {
         self.x = x;
         x
     }
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
-    }
 }
 
 impl SeedableRng<u32> for MinStd_Rand {
@@ -46,10 +42,6 @@ impl Rng for Rand48 {
         let x = ((0x5DEECE66D * self.x as u64 + 0xB) % 0x1_0000_0000_0000) as u32;
         self.x = x;
         x
-    }
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
     }
 }
 

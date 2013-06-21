@@ -5,6 +5,7 @@
 
 #[crate_type="lib"];
 
+#[allow(default_methods)];
 
 pub use traits::*;
 

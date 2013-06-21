@@ -29,10 +29,6 @@ impl Rng for LFSR258 {
         SeedableRng::new_seeded(s)
     }
 
-    #[inline(always)]
-    fn next32(&mut self) -> u32 {
-        self.next64() as u32
-    }
     #[inline]
     fn next64(&mut self) -> u64 {
         step!(self.z1,  1, 53, 18446744073709551614, 10);
@@ -90,11 +86,6 @@ impl Rng for LFSR113 {
 
         self.z1 ^ self.z2 ^ self.z3 ^ self.z4
     }
-
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
-    }
 }
 
 impl SeedableRng<[u32, .. 4]> for LFSR113 {
@@ -134,11 +125,6 @@ impl Rng for Taus88 {
         step!(self.s3,  3, 11, 4294967280, 17);
 
         return self.s1 ^ self.s2 ^ self.s3;
-    }
-
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
     }
 }
 

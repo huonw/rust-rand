@@ -40,11 +40,6 @@ impl Rng for CMWC {
         unsafe { self.q.unsafe_set(self.i, q); }
         q
     }
-
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
-    }
 }
 
 static MWC256_N: uint = 256;
@@ -71,9 +66,5 @@ impl Rng for MWC256 {
         let t: u64 = MWC256_A * (self.q[self.i] as u64) + self.c as u64;
         self.c = (t >> 32) as u32;
         t as u32
-    }
-    #[inline(always)]
-    pub fn next64(&mut self) -> u64 {
-        (self.next32() as u64 << 32) | self.next32() as u64
     }
 }
