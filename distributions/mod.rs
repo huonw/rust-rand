@@ -22,7 +22,7 @@
 // could implement VIZIGNOR the ZIGNOR paper for more speed.
 
 use std::vec;
-use traits::{Rng,Rand,RngUtil};
+use traits::{Rng,Rand};
 
 mod ziggurat_tables;
 

@@ -1,6 +1,6 @@
 #[allow(unused_unsafe)];
 
-use std::{u64, uint};
+use std::uint;
 use traits::{Rng, SeedableRng};
 use rng::rt::seed;
 
@@ -102,8 +102,8 @@ impl Isaac {
         /*let mem = &mut self.mem;
         let rsl = &mut self.rsl;*/
 
-
-        static midpoint: uint =  RAND_SIZE / 2;
+        static MIDPOINT: uint =  RAND_SIZE / 2;
+        static MP_VEC: [(uint, uint), .. 2] = [(0, MIDPOINT), (MIDPOINT, 0)];
 
         macro_rules! ind (($x:expr) => {
             unsafe { self.mem.unsafe_get((($x >> 2) as uint & (RAND_SIZE - 1))) }
@@ -129,8 +129,8 @@ impl Isaac {
             }}
         );
 
-        for [(0, midpoint), (midpoint, 0)].each |&(mr_offset, m2_offset)| {
-            for uint::range_step(0, midpoint, 4) |base| {
+        for MP_VEC.iter().advance |&(mr_offset, m2_offset)| {
+            for uint::range_step(0, MIDPOINT, 4) |base| {
                 rngstep!(0, 13);
                 rngstep!(1, -6);
                 rngstep!(2, 2);
@@ -291,8 +291,8 @@ impl Isaac64 {
         // abbreviations
         let mut a = self.a;
         let mut b = self.b + self.c;
-        static midpoint: uint =  RAND_SIZE_64 / 2;
-
+        static MIDPOINT: uint =  RAND_SIZE_64 / 2;
+        static MP_VEC: [(uint, uint), .. 2] = [(0,MIDPOINT), (MIDPOINT, 0)];
         macro_rules! ind (
             ($x:expr) => {
                 unsafe { self.mem.unsafe_get(($x as uint >> 3) & (RAND_SIZE_64 - 1)) }
@@ -306,11 +306,7 @@ impl Isaac64 {
                 } else {
                     a << $shift as uint
                 });
-                let mix = if $j == 0 {
-                    u64::compl(mix)
-                } else {
-                    mix
-                };
+                let mix = if $j == 0 {!mix} else {mix};
 
                 unsafe {
                     let x = self.mem.unsafe_get(base + mr_offset);
@@ -324,8 +320,8 @@ impl Isaac64 {
             }}
         );
 
-        for [(0, midpoint), (midpoint, 0)].each |&(mr_offset, m2_offset)| {
-            for uint::range_step(0, midpoint, 4) |base| {
+        for MP_VEC.iter().advance |&(mr_offset, m2_offset)| {
+            for uint::range_step(0, MIDPOINT, 4) |base| {
                 rngstep!(0, 21);
                 rngstep!(1, -5);
                 rngstep!(2, 12);

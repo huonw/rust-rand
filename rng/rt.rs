@@ -17,7 +17,7 @@ pub fn rt_seed() -> ~[u8] {
     unsafe {
         let n = rustrt::rand_seed_size() as uint;
         let mut s = vec::from_elem(n, 0_u8);
-        do vec::as_mut_buf(s) |p, sz| {
+        do s.as_mut_buf |p, sz| {
             rustrt::rand_gen_seed(p, sz as size_t)
         }
         s
