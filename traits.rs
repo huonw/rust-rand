@@ -6,6 +6,17 @@ pub trait Rand {
     /// generator.
     fn rand<R: Rng>(rng: &mut R) -> Self;
 
+    /// Create a vector of length `len` filled with random values.
+    fn rand_vec<R: Rng>(rng: &mut R, len: uint) -> ~[Self] {
+        vec::from_fn(len, |_| rng.gen())
+    }
+
+    /// Fill a preallocated vector with random values.
+    fn fill_vec<R: Rng>(rng: &mut R, v: &mut [Self]) {
+        for v.mut_iter().advance |idx| {
+            *idx = rng.gen();
+        }
+    }
 }
 
 /// A random number generator.
@@ -19,13 +30,27 @@ pub trait Rng {
 
     /// Return the next random u32.
     #[inline]
-    pub fn next32(&mut self) -> u32 {
-        self.next64() as u32
+    pub fn next_u32(&mut self) -> u32 {
+        self.next_u64() as u32
     }
     /// Return the next random u64.
     #[inline]
-    pub fn next64(&mut self) -> u64 {
-        self.next32() as u64 << 32 | self.next32() as u64
+    pub fn next_u64(&mut self) -> u64 {
+        self.next_u32() as u64 << 32 | self.next_u32() as u64
+    }
+
+    /// Return the next random f32.
+    #[inline]
+    fn next_f32(&mut self) -> f32 {
+        static SCALE: f32 = ((u32::max_value as f32) + 1.0f32);
+        (self.next_u32() as f32) / SCALE
+    }
+
+    /// Return the next random f64.
+    #[inline]
+    pub fn next_f64(&mut self) -> f64 {
+        static SCALE : f64 = ((u64::max_value as f64) + 1.0f64);
+        (self.next_u64() as f64) / SCALE
     }
 
     /// Return a random value for a Rand type
@@ -34,31 +59,11 @@ pub trait Rng {
         Rand::rand(self)
     }
 
-    /**
-     * Return an int randomly chosen from the range [start, end),
-     * failing if start >= end
-     */
-    fn gen_int_range(&mut self, start: int, end: int) -> int {
-        assert!(start < end);
-        start + (self.gen::<int>() % (end - start))
-    }
-
-    /**
-     * Return a uint randomly chosen from the range [start, end),
-     * failing if start >= end
-     */
-    fn gen_uint_range(&mut self, start: uint, end: uint) -> uint {
-        assert!(start < end);
-        start + (self.gen::<uint>() % (end - start))
-    }
-
-    /**
-     * Return a char randomly chosen from chars, failing if chars is empty
-     */
-    fn gen_char_from(&mut self, chars: &str) -> char {
-        assert!(!chars.is_empty());
-        let cs = chars.iter().collect::<~[char]>();
-        *self.choose(cs)
+    /// Return a random byte string of the specified length. This does
+    /// not necessarily give the same result as calling `gen()` `len`
+    /// times.
+    fn gen_vec<T: Rand>(&mut self, len: uint) -> ~[T] {
+        Rand::rand_vec(self, len)
     }
 
     /// Return a bool with a 1-in-n chance of true
@@ -66,76 +71,34 @@ pub trait Rng {
         if n == 0u {
             true
         } else {
-            self.gen_uint_range(1u, n + 1u) == 1u
+            self.gen_range(0u, n) == 0u
         }
     }
 
     /**
      * Return a random string of the specified length composed of A-Z,a-z,0-9
      */
-    fn gen_str(&mut self, len: uint) -> ~str {
-        let charset = ~"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                       abcdefghijklmnopqrstuvwxyz\
-                       0123456789";
+    fn gen_alphanum_str(&mut self, len: uint) -> ~str {
+        static CHARSET: &'static [u8] = bytes!("ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                                                abcdefghijklmnopqrstuvwxyz\
+                                                0123456789");
         let mut s = ~"";
-        let mut i = 0u;
-        while (i < len) {
-            s = s + str::from_char(self.gen_char_from(charset));
-            i += 1u;
+        for len.times {
+            s.push_char(self.choose(CHARSET).unwrap() as char)
         }
         s
     }
 
-    /// Return a random byte string of the specified length
-    fn gen_bytes(&mut self, len: uint) -> ~[u8] {
-        do vec::from_fn(len) |_i| {
-            self.gen()
-        }
-    }
-
-    /// Choose an item randomly, failing if values is empty
-    fn choose<'a, T>(&mut self, values: &'a [T]) -> &'a T {
-        self.choose_option(values).get()
-    }
-
     /// Choose Some(&item) randomly, returning None if values is empty
-    fn choose_option<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
+    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
         if values.is_empty() {
             None
         } else {
-            Some(&values[self.gen_uint_range(0u, values.len())])
+            Some(&values[self.gen_range(0u, values.len())])
         }
     }
-    /**
-     * Choose an item respecting the relative weights, failing if the sum of
-     * the weights is 0
-     */
-    fn choose_weighted<'a, T>(&mut self, v : &'a [Weighted<T>]) -> &'a T {
-        self.choose_weighted_option(v).get()
-    }
 
-    /**
-     * Choose Some(item) respecting the relative weights, returning none if
-     * the sum of the weights is 0
-     */
-    fn choose_weighted_option<'a, T>(&mut self, v: &'a [Weighted<T>]) -> Option<&'a T> {
-        let total = v.iter().fold(0, |total, item| total + item.weight);
-
-        if total == 0u {
-            return None;
-        }
-        let chosen = self.gen_uint_range(0u, total);
-        let mut so_far = 0u;
-        for v.iter().advance |item| {
-            so_far += item.weight;
-            if so_far > chosen {
-                return Some(&'a item.item);
-            }
-        }
-        util::unreachable();
-    }
-
-    /// Shuffle a vec
+    /// Shuffle a vector.
     fn shuffle<T>(&mut self, values: ~[T]) -> ~[T] {
         let mut v = values;
         self.shuffle_mut(v);
@@ -157,22 +120,6 @@ pub trait Rng {
     fn rand_iter(self) -> super::RandIterator<Self> {
         super::RandIterator::new(self)
     }
-}
-
-/**
- * Return a vec containing copies of the items, in order, where
- * the weight of the item determines how many copies there are
- */
-fn weighted_vec<T:Clone>(v: &[Weighted<T>]) -> ~[T] {
-    let mut r = ~[];
-    for v.iter().advance |item| {
-        let new_len = r.len() + item.weight;
-        r.reserve_at_least(new_len);
-        for item.weight.times {
-            r.push(item.item.clone())
-        }
-    }
-    r
 }
 
 /// Random number generators that can be seeded with a scalar.
@@ -271,23 +218,20 @@ impl Rand for u64 {
 impl Rand for float {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> float {
-        rng.gen::<f64>() as float
+        Rand::rand::<f64>(rng) as float
     }
 }
-static SCALE_32 : f32 = ((u32::max_value as f32) + 1.0f32);
+
 impl Rand for f32 {
-    #[inline]
+    #[inline(always)]
     fn rand<R: Rng>(rng: &mut R) -> f32 {
-        let u1 = rng.next32() as f32;
-        u1 / SCALE_32
+        rng.next_f32()
     }
 }
-static SCALE_64 : f64 = ((u64::max_value as f64) + 1.0f64);
 impl Rand for f64 {
-    #[inline]
+    #[inline(always)]
     fn rand<R: Rng>(rng: &mut R) -> f64 {
-        let u1 = rng.next64() as f64;
-        u1 / SCALE_64
+        rng.next_f64()
     }
 }
 
@@ -362,13 +306,6 @@ impl<T: Rand> Rand for ~T {
 impl<T: Rand> Rand for @T {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> @T { @rng.gen() }
-}
-
-
-/// A value with a particular weight compared to other values
-pub struct Weighted<T> {
-    weight: uint,
-    item: T,
 }
 
 #[cfg(test)]
