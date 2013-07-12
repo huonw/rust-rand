@@ -7,7 +7,7 @@ fn main() {
 
     let mut sum = 0;
     for 1_000_000_000.times {
-        sum += rng.next32();
+        sum += rng.next_u32();
     }
     println(fmt!("%?", sum));
 }

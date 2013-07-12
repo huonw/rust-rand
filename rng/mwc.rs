@@ -1,5 +1,5 @@
 use std::{uint};
-use traits::Rng;
+use Rng;
 
 static CMWC_PHI: u32 = 0x9e3779b9;
 static CMWC_N : uint = 4096;
@@ -27,7 +27,7 @@ impl Rng for CMWC {
     }
 
     #[inline]
-    fn next32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         self.i = (self.i + 1) & (CMWC_N - 1);
 
         let t = CMWC_A * unsafe { self.q.unsafe_get(self.i) as u64 } + self.c as u64;
@@ -61,7 +61,7 @@ impl Rng for MWC256 {
     }
 
     #[inline]
-    fn next32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         self.i += 1;
         let t: u64 = MWC256_A * (self.q[self.i] as u64) + self.c as u64;
         self.c = (t >> 32) as u32;

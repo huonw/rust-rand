@@ -1,11 +1,13 @@
-use traits::{Rng,SeedableRng};
-use std::cast;
-pub use self::xorshift::*;
-pub use self::mersenne_twister::*;
-pub use self::isaac::*;
-pub use self::lcg::*;
-pub use self::lfsr::*;
-pub use self::mwc::*;
+use Rng;
+use SeedableRng;
+use std::{cast, vec, sys};
+
+pub use self::xorshift::XorShift4;
+pub use self::mersenne_twister::{MT19937, MT19937_64, WELL512};
+pub use self::isaac::{Isaac, Isaac64};
+pub use self::lcg::{MinStd_Rand, Rand48};
+pub use self::lfsr::{LFSR258, LFSR113, Taus88};
+pub use self::mwc::{CMWC, MWC256};
 
 pub mod xorshift;
 pub mod mersenne_twister;
@@ -14,7 +16,23 @@ pub mod lcg;
 pub mod mwc;
 pub mod lfsr;
 
-pub mod rt;
+#[cfg(win32)]
+#[path="os_win.rs"]
+pub mod os;
+
+#[cfg(not(win32))]
+#[path="os_unix.rs"]
+pub mod os;
+pub mod hardware;
+
+pub unsafe fn seed<T>(len: uint) -> ~[T] {
+    let byte_size = len * sys::nonzero_size_of::<T>();
+    let mut vec = vec::from_elem(byte_size, 0u8);
+
+    Rng::new::<os::OSRng>().fill_vec(vec);
+
+    cast::transmute(vec)
+}
 
 #[cfg(not(target_word_size="64"))]
 pub struct StdRng { priv rng: Isaac }
@@ -29,12 +47,12 @@ impl Rng for StdRng {
     }
 
     #[inline(always)]
-    fn next32(&mut self) -> u32 {
-        self.rng.next32()
+    fn next_u32(&mut self) -> u32 {
+        self.rng.next_u32()
     }
     #[inline(always)]
-    fn next64(&mut self) -> u64 {
-        self.rng.next64()
+    fn next_u64(&mut self) -> u64 {
+        self.rng.next_u64()
     }
 }
 

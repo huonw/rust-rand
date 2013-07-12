@@ -1,10 +1,10 @@
 #[allow(unused_imports)];
 
 extern mod rand;
-use std::*;
+use std::{uint, io, cast, vec};
 use std::num::Zero;
-use rand::*;
-use rand::rng::*;
+use rand::Rng;
+use rand::rng::StdRng;
 use rand::rng::isaac::*;
 use rand::rng::mersenne_twister::*;
 use rand::rng::xorshift::*;
@@ -22,10 +22,10 @@ impl Runner for SumN {
     fn run<R: Rng>(&self, mut rng: R, bits: uint) {
         macro_rules! go(
             ($ty:ty) => {{
-                let mut sum: $ty = num::Zero::zero();
+                let mut sum: $ty = Zero::zero();
 
                 for self.n.times {
-                    sum += rng.gen();
+                    //sum += rng.gen();
                 }
                 println(fmt!("%?", sum));
             }}
@@ -43,14 +43,14 @@ struct DumpRaw { megabytes: Option<uint> }
 
 impl Runner for DumpRaw {
     fn run<R: Rng>(&self, mut rng: R, bits: uint) {
-        macro_rules! go(
+       macro_rules! go(
             ($ty:ty) => {{
                 let mut buffer: ~[$ty] = vec::from_elem(8*(1 << 20)/bits, 0); // 1 MB
 
                 // -1 is approximately infinity
                 for self.megabytes.get_or_default(-1 as uint).times {
                     for buffer.mut_iter().advance |elem| {
-                        *elem = rng.gen();
+                        //*elem = rng.gen();
                     }
 
                     io::stdout().write(unsafe { cast::transmute::<&[$ty], &[u8]>(buffer) });
@@ -94,17 +94,17 @@ fn str_to_rng<R: Runner>(name: &str, r: R) {
 }
 
 fn main() {
-    let mut args = os::args();
+    let mut args = std::os::args();
     let prog_name = args.shift();
     // argument parsing!
     match args {
-        [~"sum", r, .. rest] => {
-            let count = rest.head_opt().chain(|&x| uint::from_str(x)).get_or_default(100_000_000);
-            str_to_rng(r, SumN { n: count });
+        [~"sum", ref r, .. rest] => {
+            let count = rest.head_opt().chain(|x| uint::from_str(*x)).get_or_default(100_000_000);
+            str_to_rng(*r, SumN { n: count });
         }
-        [~"dump", r, .. rest] => {
-            let count = rest.head_opt().chain(|&x| uint::from_str(x));
-            str_to_rng(r, DumpRaw { megabytes: count });
+        [~"dump", ref r, .. rest] => {
+            let count = rest.head_opt().chain(|x| uint::from_str(*x));
+            str_to_rng(*r, DumpRaw { megabytes: count });
         }
         _ => print_help(prog_name)
     }

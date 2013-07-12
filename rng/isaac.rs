@@ -1,8 +1,9 @@
 #[allow(unused_unsafe)];
 
 use std::uint;
-use traits::{Rng, SeedableRng};
-use rng::rt::seed;
+use Rng;
+use SeedableRng;
+use rng::seed;
 
 
 static RAND_SIZE_LEN: uint = 8;
@@ -153,7 +154,7 @@ impl Rng for Isaac {
     }
 
     #[inline]
-    fn next32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         if self.cnt == 0 {
             // make some more numbers
             self.isaac();
@@ -341,7 +342,7 @@ impl Rng for Isaac64 {
     }
 
     #[inline]
-    fn next64(&mut self) -> u64 {
+    fn next_u64(&mut self) -> u64 {
         if self.cnt == 0 {
             // make some more numbers
             self.isaac64();

@@ -1,5 +1,6 @@
-use traits::{Rng, SeedableRng};
-use rng::rt::seed;
+use Rng;
+use SeedableRng;
+use rng::seed;
 
 pub struct MinStd_Rand {
     priv x: u32
@@ -11,7 +12,7 @@ impl Rng for MinStd_Rand {
     }
 
     #[inline]
-    fn next32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         let x = (self.x * 48271) % 2147483647;
         self.x = x;
         x
@@ -38,7 +39,7 @@ impl Rng for Rand48 {
     }
 
     #[inline]
-    fn next32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         let x = ((0x5DEECE66D * self.x as u64 + 0xB) % 0x1_0000_0000_0000) as u32;
         self.x = x;
         x

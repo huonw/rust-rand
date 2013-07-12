@@ -1,6 +1,7 @@
 use std::{uint, cmp};
-use rng::rt::seed;
-use traits::{Rng, SeedableRng};
+use rng::seed;
+use Rng;
+use SeedableRng;
 
 static MT_N: uint = 624;
 static MT_M: uint = 397;
@@ -44,7 +45,7 @@ impl Rng for MT19937 {
     }
 
     #[inline]
-    pub fn next32(&mut self) -> u32 {
+    pub fn next_u32(&mut self) -> u32 {
         if self.index >= MT_N {
             self.generate_numbers();
         }
@@ -153,7 +154,7 @@ impl Rng for MT19937_64 {
     }
 
     #[inline]
-    fn next64(&mut self) -> u64 {
+    fn next_u64(&mut self) -> u64 {
         if self.index >= MT64_N {
             self.generate_numbers();
         }
@@ -237,7 +238,7 @@ impl Rng for WELL512 {
     }
 
     #[inline]
-    fn next32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         let mut a;
         let mut c;
         let b; let d;

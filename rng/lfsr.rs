@@ -1,5 +1,6 @@
-use traits::{Rng, SeedableRng};
-use rng::rt::seed;
+use Rng;
+use SeedableRng;
+use rng::seed;
 use std::uint;
 
 macro_rules! step{
@@ -30,7 +31,7 @@ impl Rng for LFSR258 {
     }
 
     #[inline]
-    fn next64(&mut self) -> u64 {
+    fn next_u64(&mut self) -> u64 {
         step!(self.z1,  1, 53, 18446744073709551614, 10);
         step!(self.z2, 24, 50, 18446744073709551104,  5);
         step!(self.z3,  3, 23, 18446744073709547520, 29);
@@ -78,7 +79,7 @@ impl Rng for LFSR113 {
     }
 
     #[inline]
-    fn next32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         step!(self.z1,  6, 13, 4294967294, 18);
         step!(self.z2,  2, 27, 4294967288,  2);
         step!(self.z3, 13, 21, 4294967280,  7);
@@ -119,7 +120,7 @@ impl Rng for Taus88 {
     }
 
     #[inline]
-    fn next32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         step!(self.s1, 13, 19, 4294967294, 12);
         step!(self.s2,  2, 25, 4294967288,  4);
         step!(self.s3,  3, 11, 4294967280, 17);

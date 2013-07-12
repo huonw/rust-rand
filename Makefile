@@ -1,9 +1,14 @@
 RUSTC=rustc
 RUSTFLAGS=--opt-level=3
 
-.PHONY: clean lib check test bench all
+.PHONY: clean lib check test bench all run
 
 all: lib
+
+run: bench/run
+
+bench/run: bench/run.rs
+	rustc --opt-level=3 -L . bench/run.rs
 
 clean:
 	-rm librand*.so test-rand

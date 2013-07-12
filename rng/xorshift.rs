@@ -1,4 +1,5 @@
-use traits::{Rng, SeedableRng};
+use Rng;
+use SeedableRng;
 
 /// An [Xorshift random number
 /// generator](http://en.wikipedia.org/wiki/Xorshift). Not suitable for
@@ -18,7 +19,7 @@ impl Rng for XorShift4 {
     }
 
     #[inline]
-    pub fn next32(&mut self) -> u32 {
+    pub fn next_u32(&mut self) -> u32 {
         let x = self.x;
         let t = x ^ (x << 11);
         self.x = self.y;
