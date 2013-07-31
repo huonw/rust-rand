@@ -15,7 +15,7 @@ impl Rng for XorShift4 {
     /// Create an xor shift random number generator with a default seed.
     pub fn new() -> XorShift4 {
         // constants taken from http://en.wikipedia.org/wiki/Xorshift
-        SeedableRng::new_seeded([123456789, 362436069, 521288629, 88675123])
+        SeedableRng::from_seed([123456789, 362436069, 521288629, 88675123])
     }
 
     #[inline]
@@ -46,7 +46,7 @@ impl SeedableRng<[u32, .. 4]> for XorShift4 {
      * constructed with a given seed will generate the same sequence of values as
      * all other generators constructed with the same seed.
      */
-    fn new_seeded(seed: [u32, .. 4]) -> XorShift4 {
+    fn from_seed(seed: [u32, .. 4]) -> XorShift4 {
         let mut r = XorShift4 { x: 0, y: 0, z: 0, w: 0 };
         r.reseed(seed);
         r

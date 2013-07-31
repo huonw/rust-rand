@@ -8,7 +8,7 @@ pub struct MinStd_Rand {
 
 impl Rng for MinStd_Rand {
     fn new() -> MinStd_Rand {
-        SeedableRng::new_seeded(unsafe {seed(1)}[0])
+        SeedableRng::from_seed(unsafe {seed(1)}[0])
     }
 
     #[inline]
@@ -24,7 +24,7 @@ impl SeedableRng<u32> for MinStd_Rand {
         self.x = seed
     }
 
-    fn new_seeded(seed: u32) -> MinStd_Rand {
+    fn from_seed(seed: u32) -> MinStd_Rand {
         MinStd_Rand { x: seed }
     }
 }
@@ -35,7 +35,7 @@ pub struct Rand48 {
 
 impl Rng for Rand48 {
     fn new() -> Rand48 {
-        SeedableRng::new_seeded(unsafe {seed(1)}[0])
+        SeedableRng::from_seed(unsafe {seed(1)}[0])
     }
 
     #[inline]
@@ -51,7 +51,7 @@ impl SeedableRng<u32> for Rand48 {
         self.x = seed
     }
 
-    fn new_seeded(seed: u32) -> Rand48 {
+    fn from_seed(seed: u32) -> Rand48 {
         Rand48 { x: seed }
     }
 }

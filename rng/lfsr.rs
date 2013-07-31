@@ -27,7 +27,7 @@ impl Rng for LFSR258 {
             // minimums, by zeroing the high bit and adding the minimum
             s[i] = (rand[i] >> 1) + LFSR258_LIMITS[i];
         }
-        SeedableRng::new_seeded(s)
+        SeedableRng::from_seed(s)
     }
 
     #[inline]
@@ -57,7 +57,7 @@ impl SeedableRng<[u64, .. 5]> for LFSR258 {
         self.z5 = seed[4];
     }
 
-    fn new_seeded(seed: [u64, .. 5]) -> LFSR258 {
+    fn from_seed(seed: [u64, .. 5]) -> LFSR258 {
         let mut rng = LFSR258 { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
         rng.reseed(seed);
         rng
@@ -75,7 +75,7 @@ pub struct LFSR113 {
 impl Rng for LFSR113 {
     fn new() -> LFSR113 {
         let seed = unsafe { seed::<u32>(4) };
-        SeedableRng::new_seeded([seed[0], seed[1], seed[2], seed[3]])
+        SeedableRng::from_seed([seed[0], seed[1], seed[2], seed[3]])
     }
 
     #[inline]
@@ -96,7 +96,7 @@ impl SeedableRng<[u32, .. 4]> for LFSR113 {
         self.z3 = seed[2];
         self.z4 = seed[3];
     }
-    fn new_seeded(seed: [u32, .. 4]) -> LFSR113 {
+    fn from_seed(seed: [u32, .. 4]) -> LFSR113 {
         LFSR113 {
             z1: seed[0],
             z2: seed[1],
@@ -116,7 +116,7 @@ pub struct Taus88 {
 impl Rng for Taus88 {
      fn new() -> Taus88 { // TODO: seeds?
          let seed = unsafe { seed::<u32>(3) };
-         SeedableRng::new_seeded([seed[0], seed[1], seed[2]])
+         SeedableRng::from_seed([seed[0], seed[1], seed[2]])
     }
 
     #[inline]
@@ -135,7 +135,7 @@ impl SeedableRng<[u32, .. 3]> for Taus88 {
         self.s2 = seed[1];
         self.s3 = seed[2];
     }
-    fn new_seeded(seed: [u32, .. 3]) -> Taus88 {
+    fn from_seed(seed: [u32, .. 3]) -> Taus88 {
         Taus88 {
              s1: seed[0],
              s2: seed[1],

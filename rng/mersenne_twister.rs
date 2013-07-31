@@ -41,7 +41,7 @@ impl MT19937 {
 
 impl Rng for MT19937 {
     pub fn new() -> MT19937 {
-        SeedableRng::new_seeded::<&[u32], MT19937>(unsafe { seed(MT_N) })
+        SeedableRng::from_seed::<&[u32], MT19937>(unsafe { seed(MT_N) })
     }
 
     #[inline]
@@ -105,7 +105,7 @@ impl<Seed: MT19937Seed> SeedableRng<Seed> for MT19937 {
     fn reseed(&mut self, seed: Seed) {
         seed.reseed(self)
     }
-    fn new_seeded(seed: Seed) -> MT19937 {
+    fn from_seed(seed: Seed) -> MT19937 {
         let mut r = MT19937 { state: [0, .. MT_N], index: 0 };
         r.reseed(seed);
         r
@@ -150,7 +150,7 @@ impl MT19937_64 {
 
 impl Rng for MT19937_64 {
     fn new() -> MT19937_64 {
-        SeedableRng::new_seeded::<&[u64], MT19937_64>(unsafe { seed(MT64_N) })
+        SeedableRng::from_seed::<&[u64], MT19937_64>(unsafe { seed(MT64_N) })
     }
 
     #[inline]
@@ -218,7 +218,7 @@ impl<Seed: MT19937_64Seed> SeedableRng<Seed> for MT19937_64 {
     fn reseed(&mut self, seed: Seed) {
         seed.reseed(self)
     }
-    fn new_seeded(seed: Seed) -> MT19937_64 {
+    fn from_seed(seed: Seed) -> MT19937_64 {
         let mut r = MT19937_64 { state: [0, .. MT64_N], index: 0 };
         r.reseed(seed);
         r
@@ -234,7 +234,7 @@ pub struct WELL512 {
 
 impl Rng for WELL512 {
     fn new() -> WELL512 {
-        SeedableRng::new_seeded::<&[u32], WELL512>(unsafe { seed(WELL512_N) })
+        SeedableRng::from_seed::<&[u32], WELL512>(unsafe { seed(WELL512_N) })
     }
 
     #[inline]
@@ -271,7 +271,7 @@ impl<'self> SeedableRng<&'self [u32]> for WELL512 {
         self.index = 0;
     }
 
-    fn new_seeded(seed: &[u32]) -> WELL512 {
+    fn from_seed(seed: &[u32]) -> WELL512 {
         let mut r = WELL512 {
             state: [0, .. 16],
             index: 0

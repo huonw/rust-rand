@@ -69,7 +69,7 @@ impl StdSeed for uint {
         rng.rng.reseed(*self as u64)
     }
 }
-impl<'self, Self> StdSeed for &'self [uint] {
+impl<'self> StdSeed for &'self [uint] {
     #[cfg(not(target_word_size="64"))]
     fn reseed(&self, rng: &mut StdRng) {
         let seed: &[u32] = unsafe {cast::transmute(*self)};
@@ -84,7 +84,7 @@ impl<'self, Self> StdSeed for &'self [uint] {
 
 impl<Seed: StdSeed> SeedableRng<Seed> for StdRng {
     fn reseed(&mut self, seed: Seed) { seed.reseed(self) }
-    fn new_seeded(seed: Seed) -> StdRng {
+    fn from_seed(seed: Seed) -> StdRng {
         let mut rng = StdRng {
             rng: unsafe {::std::unstable::intrinsics::uninit()} };
         rng.reseed(seed);

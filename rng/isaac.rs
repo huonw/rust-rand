@@ -150,7 +150,7 @@ impl Rng for Isaac {
     fn new() -> Isaac {
         let seed = unsafe { seed::<u32>(RAND_SIZE) };
         let slice: &[u32] = seed;
-        SeedableRng::new_seeded(slice)
+        SeedableRng::from_seed(slice)
     }
 
     #[inline]
@@ -193,7 +193,7 @@ impl<Seed: IsaacSeed> SeedableRng<Seed> for Isaac {
         seed.reseed(self);
     }
 
-    fn new_seeded(seed: Seed) -> Isaac {
+    fn from_seed(seed: Seed) -> Isaac {
         let mut rng = Isaac {
             cnt: 0,
             rsl: [0, .. RAND_SIZE],
@@ -338,7 +338,7 @@ impl Isaac64 {
 
 impl Rng for Isaac64 {
     fn new() -> Isaac64 {
-        SeedableRng::new_seeded::<&[u64], Isaac64>(unsafe { seed(RAND_SIZE_64) })
+        SeedableRng::from_seed::<&[u64], Isaac64>(unsafe { seed(RAND_SIZE_64) })
     }
 
     #[inline]
@@ -380,7 +380,7 @@ impl<Seed: Isaac64Seed> SeedableRng<Seed> for Isaac64 {
     /// will be silently ignored. A generator constructed with a given seed
     /// will generate the same sequence of values as all other generators
     /// constructed with the same seed.
-    fn new_seeded(seed: Seed) -> Isaac64 {
+    fn from_seed(seed: Seed) -> Isaac64 {
         let mut rng = Isaac64 {
             cnt: 0,
             rsl: [0, .. RAND_SIZE_64],

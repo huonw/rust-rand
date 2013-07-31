@@ -220,7 +220,7 @@ pub trait SeedableRng<Seed>: Rng {
     pub fn reseed(&mut self, Seed);
 
     /// Create a new RNG with the given seed.
-    pub fn new_seeded(seed: Seed) -> Self;
+    pub fn from_seed(seed: Seed) -> Self;
 }
 
 impl Rand for int {
