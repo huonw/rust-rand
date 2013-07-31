@@ -7,7 +7,10 @@
 
 #[allow(default_methods)];
 
-use std::{str, u64, u32, vec};
+#[cfg(test)]
+extern mod extra;
+
+use std::{str, u64, u32, vec, local_data};
 
 #[path="rng/mod.rs"]
 pub mod rng;
@@ -15,7 +18,8 @@ pub mod rng;
 #[path="distributions/mod.rs"]
 pub mod distributions;
 
-
+// used to make space in TLS for a random number generator
+static tls_rng_state: local_data::Key<@mut rng::StdRng> = &local_data::Key;
 
 /**
  * Gives back a lazily initialized task-local random number generator,
@@ -24,21 +28,11 @@ pub mod distributions;
  */
 #[inline]
 pub fn task_rng() -> @mut rng::StdRng {
-    use std::local_data;
-
-    // used to make space in TLS for a random number generator
-    fn tls_rng_state(_v: @mut rng::StdRng) {}
-
-    let r : Option<@mut rng::StdRng>;
-    unsafe {
-        r = local_data::get(tls_rng_state, |k| k.map(|k| **k));
-    }
+    let r = local_data::get(tls_rng_state, |k| k.map(|&k| *k));
     match r {
         None => {
             let rng = @mut Rng::new();
-            unsafe {
-                local_data::set(tls_rng_state, rng);
-            }
+            local_data::set(tls_rng_state, rng);
             rng
         }
         Some(rng) => rng
@@ -395,7 +389,7 @@ impl<T: Rand> Rand for ~T {
     fn rand<R: Rng>(rng: &mut R) -> ~T { ~rng.gen() }
 }
 
-impl<T: Rand> Rand for @T {
+impl<T: 'static + Rand> Rand for @T {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> @T { @rng.gen() }
 }

@@ -108,7 +108,7 @@ mod bench {
             }
             // avoid dead code elimination
             if sum.is_zero() {
-                return ();
+                println("what're the chances!?");
             }
         }};
         ($rng:ident, $ty:ty) => { bench_rng!(ctor: $rng, $ty) };
