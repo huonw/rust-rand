@@ -5,8 +5,6 @@
 
 #[crate_type="lib"];
 
-#[allow(default_methods)];
-
 #[cfg(test)]
 extern mod extra;
 
@@ -75,7 +73,6 @@ pub trait Rand {
     /// generator.
     fn rand<R: Rng>(rng: &mut R) -> Self;
 
-/*
     /// Create a vector of length `len` filled with random values.
     fn rand_vec<R: Rng>(rng: &mut R, len: uint) -> ~[Self] {
         vec::from_fn(len, |_| rng.gen())
@@ -87,7 +84,6 @@ pub trait Rand {
             *idx = rng.gen();
         }
     }
-*/
 }
 
 // Causes an ICE if these are placed in the appropriate function.
@@ -143,8 +139,7 @@ pub trait Rng {
     /// not necessarily give the same result as calling `gen()` `len`
     /// times.
     fn gen_vec<T: Rand>(&mut self, len: uint) -> ~[T] {
-        // Rand::rand_vec(self, len)
-        vec::from_fn(len, |_| self.gen())
+        Rand::rand_vec(self, len)
     }
 
     /// Generate a random integer in the range [`low`, `high`).
@@ -225,7 +220,7 @@ impl Rand for int {
     }
 
     #[inline]
-    #[cfg(not(target_word_size="32"))]
+    #[cfg(target_word_size="64")]
     fn rand<R: Rng>(rng: &mut R) -> int {
         rng.next_u64() as int
     }
@@ -261,13 +256,13 @@ impl Rand for i64 {
 
 impl Rand for uint {
     #[inline]
-    #[target_word_size=32]
+    #[cfg(target_word_size="32")]
     fn rand<R: Rng>(rng: &mut R) -> uint {
         rng.next_u32() as uint
     }
 
     #[inline]
-    #[not(target_word_size=32)]
+    #[cfg(target_word_size="64")]
     fn rand<R: Rng>(rng: &mut R) -> uint {
         rng.next_u64() as uint
     }
