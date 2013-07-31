@@ -1,11 +1,17 @@
 #!/bin/bash
 
+if [[ $# -eq 0 ]]; then
+    RUSTC=rustc
+else
+    RUSTC=$1
+fi
+
 cd bench
 for f in *.rs; do
     if [[ $f = run.rs ]]; then continue; fi
     echo '*** '$f' ***'
     echo '** Rust **'
-	rustc --opt-level=3 -L .. $f
+	$RUSTC --opt-level=3 -L .. $f
 	time ${f%.rs}
 
     if [[ -f ext/$f.c ]]; then

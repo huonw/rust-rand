@@ -8,7 +8,7 @@ all: lib
 run: bench/run
 
 bench/run: bench/run.rs
-	rustc --opt-level=3 -L . bench/run.rs
+	$(RUSTC) --opt-level=3 -L . bench/run.rs
 
 clean:
 	-rm librand*.so test-rand
@@ -21,7 +21,7 @@ lib-bench: test-rand
 	./test-rand --bench $(TESTNAME)
 
 ext-bench: lib
-	bench/run.sh
+	bench/run.sh $(RUSTC)
 
 test: test-rand
 	./test-rand $(TESTNAME)

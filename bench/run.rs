@@ -25,7 +25,7 @@ impl Runner for SumN {
                 let mut sum: $ty = Zero::zero();
 
                 for self.n.times {
-                    //sum += rng.gen();
+                    sum += rng.gen();
                 }
                 println(fmt!("%?", sum));
             }}
@@ -45,12 +45,12 @@ impl Runner for DumpRaw {
     fn run<R: Rng>(&self, mut rng: R, bits: uint) {
        macro_rules! go(
             ($ty:ty) => {{
-                let mut buffer: ~[$ty] = vec::from_elem(8*(1 << 20)/bits, 0); // 1 MB
+                let mut buffer: ~[$ty] = vec::from_elem(8*(1 << 20)/bits, 0 as $ty); // 1 MB
 
                 // -1 is approximately infinity
                 for self.megabytes.get_or_default(-1 as uint).times {
                     for buffer.mut_iter().advance |elem| {
-                        //*elem = rng.gen();
+                        *elem = rng.gen();
                     }
 
                     io::stdout().write(unsafe { cast::transmute::<&[$ty], &[u8]>(buffer) });
@@ -78,7 +78,7 @@ fn str_to_rng<R: Runner>(name: &str, r: R) {
                 r.run(__rng, $bits);
             } else)*
                 {
-                    fail!("unrecognised RNG `%s`")
+                    fail!("unrecognised RNG `%s`", name)
                 }
         }
     )
