@@ -1,6 +1,6 @@
 use Rng;
 use super::{Sample, Distribution};
-use std::{num, f64};
+use std::num;
 struct Gamma {
     shape: f64,
     rate: f64,
@@ -18,7 +18,7 @@ impl Gamma {
 }
 
 impl Sample<f64> for Gamma {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng>(&self, _rng: &mut R) -> f64 {
         fail!()
     }
 }
@@ -59,7 +59,7 @@ impl Gamma {
         let z_on_a = z * a_inv;
         let b = 1.0 - num::exp(-z) * a / z;
 
-        for v.mut_iter().advance |elem| {
+        for elem in v.mut_iter() {
             loop {
                 let p = b * r.gen::<f64>();
                 if p <= 1.0 {

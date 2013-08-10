@@ -1,7 +1,6 @@
 use Rng;
 use SeedableRng;
 use rng::seed;
-use std::uint;
 
 macro_rules! step{
     ($thing:expr, $s1:expr, $s2:expr, $and:expr, $s3:expr) => {{
@@ -22,7 +21,7 @@ impl Rng for LFSR258 {
     fn new() -> LFSR258 {
         let mut s = [0, .. 5];
         let rand = unsafe { seed::<u64>(5) };
-        for uint::range(0, 5) |i| {
+        for i in range(0, 5) {
             // force every seed value to be at least as large as the
             // minimums, by zeroing the high bit and adding the minimum
             s[i] = (rand[i] >> 1) + LFSR258_LIMITS[i];
@@ -45,10 +44,10 @@ impl Rng for LFSR258 {
 ///  4095, 131071 and 8388607 respectively.
 impl SeedableRng<[u64, .. 5]> for LFSR258 {
     fn reseed(&mut self, seed: [u64, .. 5]) {
-        for uint::range(0, 5) |i| {
-            assert!(seed[i] >= LFSR258_LIMITS[i],
+        for (i, (seed_val, limit)) in seed.iter().zip(LFSR258_LIMITS.iter()).enumerate() {
+            assert!(*seed_val >= *limit,
                     "LFSR258 requires seed number %u to be at least %? (recieved %?)",
-                    i, LFSR258_LIMITS[i], seed[i]);
+                    i, *limit, *seed_val);
         }
         self.z1 = seed[0];
         self.z2 = seed[1];

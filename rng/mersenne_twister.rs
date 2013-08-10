@@ -1,4 +1,4 @@
-use std::{uint, cmp};
+use std::cmp;
 use rng::seed;
 use Rng;
 use SeedableRng;
@@ -18,12 +18,12 @@ impl MT19937 {
     #[inline]
     fn generate_numbers(&mut self) {
         unsafe {
-            for uint::range(0, MT_N - MT_M) |i| {
+            for i in range(0, MT_N - MT_M) {
                 let y = (self.state.unsafe_get(i) & MT_HI) | (self.state.unsafe_get(i+1) & MT_LO);
                 let val = self.state.unsafe_get(i + MT_M) ^ (y >> 1) ^ ((y & 1) * MT_A);
                 self.state.unsafe_set(i, val);
             }
-            for uint::range(MT_N - MT_M, MT_N - 1) |i| {
+            for i in range(MT_N - MT_M, MT_N - 1) {
                 let y = (self.state.unsafe_get(i) & MT_HI) | (self.state.unsafe_get(i+1) & MT_LO);
                 let val = self.state.unsafe_get(i + MT_M - MT_N) ^ (y >> 1) ^ ((y & 1) * MT_A);
                 self.state.unsafe_set(i, val);
@@ -64,7 +64,7 @@ trait MT19937Seed { fn reseed(&self, &mut MT19937); }
 impl MT19937Seed for u32 {
     fn reseed(&self, rng: &mut MT19937) {
         rng.state[0] = *self;
-        for uint::range(1, MT_N) |i| {
+        for i in range(1, MT_N) {
             rng.state[i] = 1812433253 * (rng.state[i-1] ^ (rng.state[i-1] >> 30)) + i as u32;
         }
 
@@ -80,7 +80,7 @@ impl<'self> MT19937Seed for &'self [u32] {
 
         let mut i = 1;
         let mut j = 0;
-        for lim.times {
+        for _ in range(0, lim) {
             let val = (rng.state[i] ^
                        (1664525 * (rng.state[i-1] ^ (rng.state[i-1] >> 30)))) + (*self)[j] + j;
             rng.state[i] = val;
@@ -92,7 +92,7 @@ impl<'self> MT19937Seed for &'self [u32] {
             if (j as uint >= len) { j = 0; }
         }
 
-        for (MT_N - 1).times {
+        for _ in range(0, MT_N - 1) {
             let val = (rng.state[i] ^
                        (156608394 * (rng.state[i-1] ^ (rng.state[i-1] >> 30)))) - i as u32;
             rng.state[i] = val;
@@ -127,12 +127,12 @@ impl MT19937_64 {
     #[inline]
     fn generate_numbers(&mut self) {
         unsafe {
-            for uint::range(0, MT64_N - MT64_M) |i| {
+            for i in range(0, MT64_N - MT64_M) {
                 let x = (self.state.unsafe_get(i) & MT64_HI) | (self.state.unsafe_get(i+1) & MT64_LO);
                 let val = self.state.unsafe_get(i + MT64_M) ^ (x >> 1) ^ ((x & 1) * MT64_A);
                 self.state.unsafe_set(i, val);
             }
-            for uint::range(MT64_N - MT64_M, MT64_N - 1) |i| {
+            for i in range(MT64_N - MT64_M, MT64_N - 1) {
                 let x = (self.state.unsafe_get(i) & MT64_HI) | (self.state.unsafe_get(i+1) & MT64_LO);
                 let val = self.state.unsafe_get(i + MT64_M - MT64_N) ^ (x >> 1) ^ ((x & 1) * MT64_A);
                 self.state.unsafe_set(i, val);
@@ -174,7 +174,7 @@ trait MT19937_64Seed {
 impl MT19937_64Seed for u64 {
     fn reseed(&self, rng: &mut MT19937_64) {
         rng.state[0] = *self;
-        for uint::range(1, MT64_N) |i| {
+        for i in range(1, MT64_N) {
             rng.state[i] = 6364136223846793005 *
                 (rng.state[i-1] ^ (rng.state[i-1] >> 62)) + i as u64;
         }
@@ -190,7 +190,7 @@ impl<'self> MT19937_64Seed for &'self [u64] {
         let lim = cmp::max(len, MT64_N);
         let mut i = 1;
         let mut j = 0;
-        for lim.times {
+        for _ in range(0, lim) {
             let val = (rng.state[i] ^
                        (3935559000370003845 * (rng.state[i-1] ^ (rng.state[i-1] >> 62)))) +
                 (*self)[j] + j;
@@ -203,7 +203,7 @@ impl<'self> MT19937_64Seed for &'self [u64] {
             if (j as uint >= len) { j = 0; }
         }
 
-        for (MT64_N - 1).times {
+        for _ in range(0, MT64_N - 1) {
             rng.state[i] = (rng.state[i] ^
                              (2862933555777941757 * (rng.state[i-1] ^ (rng.state[i-1] >> 62))))
                 - i as u64;
@@ -265,8 +265,8 @@ impl Rng for WELL512 {
 
 impl<'self> SeedableRng<&'self [u32]> for WELL512 {
     fn reseed(&mut self, seed: &[u32]) {
-        for uint::range(0, cmp::min(WELL512_N, seed.len())) |i| {
-            self.state[i] = seed[i];
+        for (elem, s) in self.state.mut_iter().zip(seed.iter()) {
+            *elem = *s;
         }
         self.index = 0;
     }

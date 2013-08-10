@@ -1,4 +1,3 @@
-use std::{uint};
 use Rng;
 
 static CMWC_PHI: u32 = 0x9e3779b9;
@@ -19,7 +18,7 @@ impl Rng for CMWC {
         r.q[1] = 1 + CMWC_PHI;
         r.q[2] = 1 + CMWC_PHI * 2;
 
-        for uint::range(3, CMWC_N) |i| {
+        for i in range(3, CMWC_N) {
             r.q[i] = r.q[i-1] ^ r.q[i-2]
         }
 

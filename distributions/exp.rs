@@ -98,7 +98,7 @@ mod tests {
         let mut rng: rng::StdRng = ::Rng::new();
 
         do b.iter {
-            for 1000.times {
+            for _ in range(0, 100) {
                 sum += *rng.gen::<Exp1>();
             }
         };

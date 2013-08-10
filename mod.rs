@@ -80,7 +80,7 @@ pub trait Rand {
 
     /// Fill a preallocated vector with random values.
     fn fill_vec<R: Rng>(rng: &mut R, v: &mut [Self]) {
-        for v.mut_iter().advance |idx| {
+        for idx in v.mut_iter() {
             *idx = rng.gen();
         }
     }
@@ -160,7 +160,7 @@ pub trait Rng {
      */
     fn gen_ascii_str(&mut self, len: uint) -> ~str {
         let mut s = str::with_capacity(len);
-        for len.times {
+        for _ in range(0, len) {
             s.push_char(*self.choose(GEN_ASCII_STR_CHARSET).unwrap() as char)
         }
         s
@@ -391,7 +391,6 @@ impl<T: 'static + Rand> Rand for @T {
 
 #[cfg(test)]
 mod tests {
-    use std::iterator::IteratorUtil;
     use super::*;
 
     #[test]
@@ -423,6 +422,6 @@ mod tests {
     fn test_iter() {
         let mut rng = rng().rand_iter();
 
-        for rng.advance |_: uint| { break }
+        for i in rng { let _: uint = i; break }
     }
 }

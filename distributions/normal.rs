@@ -34,8 +34,7 @@ impl Distribution<f64> for Normal {
     }
 
     fn cumulative(&self, sample: f64) -> f64 {
-        // 0.5 + 0.5 * f64::erf((sample - self.mean) / num::sqrt(self.sd * Real::two_pi()))
-        0.0
+        0.5 + 0.5 * f64::delegated::erf((sample - self.mean) / num::sqrt(self.sd * Real::two_pi()))
     }
     fn density(&self, sample: f64) -> f64 {
         let standard = (sample - self.mean) / self.sd;
@@ -110,7 +109,7 @@ mod bench {
         let mut rng: rng::StdRng = ::Rng::new();
 
         do b.iter {
-            for 1000.times {
+            for _ in range(0, 100) {
                 sum += *rng.gen::<StandardNormal>();
             }
         };

@@ -43,7 +43,7 @@ impl Rng for CPURng {
         CPURng { force_use_of_new: () }
     }
     fn next_u64(&mut self) -> u64 {
-        for NEXT_U64_ATTEMPTS.times {
+        for _ in range(0, NEXT_U64_ATTEMPTS) {
             let r = self.unchecked_next_u64();
             // XXX: check that that was actually a random number
             if true { return r; }

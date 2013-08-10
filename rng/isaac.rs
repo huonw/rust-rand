@@ -1,6 +1,5 @@
 #[allow(unused_unsafe)];
 
-use std::uint;
 use Rng;
 use SeedableRng;
 use rng::seed;
@@ -37,7 +36,7 @@ impl Isaac {
     /// Initialises `self`. If `use_rsl` is true, then use the current value
     /// of `rsl` as a seed, otherwise construct one algorithmically (not
     /// randomly).
-    priv fn init(&mut self, use_rsl: bool) {
+    fn init(&mut self, use_rsl: bool) {
         macro_rules! init (
             ($var:ident) => (
                 let mut $var = 0x9e3779b9;
@@ -59,12 +58,12 @@ impl Isaac {
             }}
         );
 
-        for 4.times { mix!(); }
+        for _ in range(0, 4) { mix!(); }
 
         if use_rsl {
             macro_rules! memloop (
                 ($arr:expr) => {{
-                    for uint::range_step(0, RAND_SIZE, 8) |i| {
+                    for i in range(0, RAND_SIZE / 8).transform(|i| i * 8) {
                         a+=$arr[i  ]; b+=$arr[i+1];
                         c+=$arr[i+2]; d+=$arr[i+3];
                         e+=$arr[i+4]; f+=$arr[i+5];
@@ -81,7 +80,7 @@ impl Isaac {
             memloop!(self.rsl);
             memloop!(self.mem);
         } else {
-            for uint::range_step(0, RAND_SIZE, 8) |i| {
+            for i in range(0, RAND_SIZE / 8).transform(|i| i * 8) {
                 mix!();
                 self.mem[i  ]=a; self.mem[i+1]=b;
                 self.mem[i+2]=c; self.mem[i+3]=d;
@@ -95,7 +94,7 @@ impl Isaac {
 
     /// Refills the output buffer (`self.rsl`)
     //#[inline]
-    priv fn isaac(&mut self) {
+    fn isaac(&mut self) {
         self.c += 1;
         // abbreviations
         let mut a = self.a;
@@ -130,8 +129,8 @@ impl Isaac {
             }}
         );
 
-        for MP_VEC.iter().advance |&(mr_offset, m2_offset)| {
-            for uint::range_step(0, MIDPOINT, 4) |base| {
+        for &(mr_offset, m2_offset) in MP_VEC.iter() {
+            for base in range(0, MIDPOINT / 4).transform(|i| i * 4) {
                 rngstep!(0, 13);
                 rngstep!(1, -6);
                 rngstep!(2, 2);
@@ -180,7 +179,7 @@ impl<'self> IsaacSeed for &'self [u32] {
     /// will generate the same sequence of values as all other generators
     /// constructed with the same seed.
     fn reseed(&self, rng: &mut Isaac) {
-        for rng.rsl.mut_iter().enumerate().advance |(i, rsl_elem)| {
+        for (i, rsl_elem) in rng.rsl.mut_iter().enumerate() {
             *rsl_elem = if i < self.len() {self[i]} else {0};
         }
 
@@ -233,7 +232,7 @@ impl Isaac64 {
         rng
     }
 
-    priv fn init(&mut self, use_rsl: bool) {
+    fn init(&mut self, use_rsl: bool) {
         macro_rules! init (
             ($var:ident) => (
                 let mut $var = 0x9e3779b97f4a7c13;
@@ -255,11 +254,11 @@ impl Isaac64 {
             }}
         );
 
-        for 4.times { mix!(); }
+        for _ in range(0, 4) { mix!(); }
         if use_rsl {
             macro_rules! memloop (
                 ($arr:expr) => {{
-                    for uint::range_step(0, RAND_SIZE_64, 8) |i| {
+                    for i in range(0, RAND_SIZE_64 / 8).transform(|i| i * 8) {
                         a+=$arr[i  ]; b+=$arr[i+1];
                         c+=$arr[i+2]; d+=$arr[i+3];
                         e+=$arr[i+4]; f+=$arr[i+5];
@@ -276,7 +275,7 @@ impl Isaac64 {
             memloop!(self.rsl);
             memloop!(self.mem);
         } else {
-            for uint::range_step(0, RAND_SIZE_64, 8) |i| {
+            for i in range(0, RAND_SIZE_64 / 8).transform(|i| i * 8) {
                 mix!();
                 self.mem[i  ]=a; self.mem[i+1]=b;
                 self.mem[i+2]=c; self.mem[i+3]=d;
@@ -287,7 +286,7 @@ impl Isaac64 {
 
         self.isaac64();
     }
-    priv fn isaac64(&mut self) {
+    fn isaac64(&mut self) {
         self.c += 1;
         // abbreviations
         let mut a = self.a;
@@ -321,8 +320,8 @@ impl Isaac64 {
             }}
         );
 
-        for MP_VEC.iter().advance |&(mr_offset, m2_offset)| {
-            for uint::range_step(0, MIDPOINT, 4) |base| {
+        for &(mr_offset, m2_offset) in MP_VEC.iter() {
+            for base in range(0, MIDPOINT / 4).transform(|i| i * 4) {
                 rngstep!(0, 21);
                 rngstep!(1, -5);
                 rngstep!(2, 12);
@@ -362,7 +361,7 @@ impl Isaac64Seed for u64 {
 }
 impl<'self> Isaac64Seed for &'self [u64] {
     fn reseed(&self, rng: &mut Isaac64) {
-        for rng.rsl.mut_iter().enumerate().advance |(i, rsl_elem)| {
+        for (i, rsl_elem) in rng.rsl.mut_iter().enumerate() {
             *rsl_elem = if i < self.len() {self[i]} else {0};
         }
 

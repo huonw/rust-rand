@@ -102,10 +102,11 @@ mod bench {
             let mut sum: $ty = Zero::zero();
 
             do b.iter {
-                for (1024).times {
+                for _ in range(0, 1024) {
                     sum += rng.gen();
                 }
             }
+            b.bytes = (1024 * sys::size_of::<$ty>()) as u64;
             // avoid dead code elimination
             if sum.is_zero() {
                 println("what're the chances!?");
@@ -115,24 +116,25 @@ mod bench {
 
         ($rng:ident) => {
             mod $rng {
-                extern mod extra;
+                use extra::test;
                 use super::super::*;
                 use std::num::Zero;
+                use std::sys;
 
                 #[bench]
-                fn u32(b: &mut extra::test::BenchHarness) {
+                fn u32(b: &mut test::BenchHarness) {
                     bench_rng!($rng, u32)
                 }
                 #[bench]
-                fn u64(b: &mut extra::test::BenchHarness) {
+                fn u64(b: &mut test::BenchHarness) {
                     bench_rng!($rng, u64)
                 }
                 #[bench]
-                fn f32(b: &mut extra::test::BenchHarness) {
+                fn f32(b: &mut test::BenchHarness) {
                     bench_rng!($rng, f32)
                 }
                 #[bench]
-                fn f64(b: &mut extra::test::BenchHarness) {
+                fn f64(b: &mut test::BenchHarness) {
                     bench_rng!($rng, f64)
                 }
             }
