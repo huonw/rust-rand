@@ -21,8 +21,8 @@ pub mod gamma;
 pub mod exp;
 
 pub trait Sample<Support> {
-    pub fn sample<R: Rng>(&self, &mut R) -> Support;
-    //pub fn sample_vec<R: Rng>(&self, &mut R, &mut [Support]);
+    fn sample<R: Rng>(&self, &mut R) -> Support;
+    // fn sample_vec<R: Rng>(&self, &mut R, &mut [Support]);
 }
 
 pub trait Distribution<Support>: Sample<Support> {

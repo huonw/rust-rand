@@ -63,7 +63,7 @@ impl Isaac {
         if use_rsl {
             macro_rules! memloop (
                 ($arr:expr) => {{
-                    for i in range(0, RAND_SIZE / 8).transform(|i| i * 8) {
+                    for i in range(0, RAND_SIZE / 8).map(|i| i * 8) {
                         a+=$arr[i  ]; b+=$arr[i+1];
                         c+=$arr[i+2]; d+=$arr[i+3];
                         e+=$arr[i+4]; f+=$arr[i+5];
@@ -80,7 +80,7 @@ impl Isaac {
             memloop!(self.rsl);
             memloop!(self.mem);
         } else {
-            for i in range(0, RAND_SIZE / 8).transform(|i| i * 8) {
+            for i in range(0, RAND_SIZE / 8).map(|i| i * 8) {
                 mix!();
                 self.mem[i  ]=a; self.mem[i+1]=b;
                 self.mem[i+2]=c; self.mem[i+3]=d;
@@ -130,7 +130,7 @@ impl Isaac {
         );
 
         for &(mr_offset, m2_offset) in MP_VEC.iter() {
-            for base in range(0, MIDPOINT / 4).transform(|i| i * 4) {
+            for base in range(0, MIDPOINT / 4).map(|i| i * 4) {
                 rngstep!(0, 13);
                 rngstep!(1, -6);
                 rngstep!(2, 2);
@@ -258,7 +258,7 @@ impl Isaac64 {
         if use_rsl {
             macro_rules! memloop (
                 ($arr:expr) => {{
-                    for i in range(0, RAND_SIZE_64 / 8).transform(|i| i * 8) {
+                    for i in range(0, RAND_SIZE_64 / 8).map(|i| i * 8) {
                         a+=$arr[i  ]; b+=$arr[i+1];
                         c+=$arr[i+2]; d+=$arr[i+3];
                         e+=$arr[i+4]; f+=$arr[i+5];
@@ -275,7 +275,7 @@ impl Isaac64 {
             memloop!(self.rsl);
             memloop!(self.mem);
         } else {
-            for i in range(0, RAND_SIZE_64 / 8).transform(|i| i * 8) {
+            for i in range(0, RAND_SIZE_64 / 8).map(|i| i * 8) {
                 mix!();
                 self.mem[i  ]=a; self.mem[i+1]=b;
                 self.mem[i+2]=c; self.mem[i+3]=d;
@@ -321,7 +321,7 @@ impl Isaac64 {
         );
 
         for &(mr_offset, m2_offset) in MP_VEC.iter() {
-            for base in range(0, MIDPOINT / 4).transform(|i| i * 4) {
+            for base in range(0, MIDPOINT / 4).map(|i| i * 4) {
                 rngstep!(0, 21);
                 rngstep!(1, -5);
                 rngstep!(2, 12);

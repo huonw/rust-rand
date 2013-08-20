@@ -40,12 +40,12 @@ impl MT19937 {
 
 
 impl Rng for MT19937 {
-    pub fn new() -> MT19937 {
+    fn new() -> MT19937 {
         SeedableRng::from_seed::<&[u32], MT19937>(unsafe { seed(MT_N) })
     }
 
     #[inline]
-    pub fn next_u32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         if self.index >= MT_N {
             self.generate_numbers();
         }

@@ -13,13 +13,13 @@ pub struct XorShift4 {
 
 impl Rng for XorShift4 {
     /// Create an xor shift random number generator with a default seed.
-    pub fn new() -> XorShift4 {
+    fn new() -> XorShift4 {
         // constants taken from http://en.wikipedia.org/wiki/Xorshift
         SeedableRng::from_seed([123456789, 362436069, 521288629, 88675123])
     }
 
     #[inline]
-    pub fn next_u32(&mut self) -> u32 {
+    fn next_u32(&mut self) -> u32 {
         let x = self.x;
         let t = x ^ (x << 11);
         self.x = self.y;
@@ -38,7 +38,6 @@ impl SeedableRng<[u32, .. 4]> for XorShift4 {
                 self.x = x; self.y = y;
                 self.z = z; self.w = w;
             }
-            _ => fail!("impossible: vector of length 4 that doesn't have length 4'")
         }
     }
     /**

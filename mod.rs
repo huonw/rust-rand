@@ -206,10 +206,10 @@ pub trait Rng {
 /// Random number generators that can be seeded with a scalar.
 pub trait SeedableRng<Seed>: Rng {
     /// Reseed with the given seed.
-    pub fn reseed(&mut self, Seed);
+    fn reseed(&mut self, Seed);
 
     /// Create a new RNG with the given seed.
-    pub fn from_seed(seed: Seed) -> Self;
+    fn from_seed(seed: Seed) -> Self;
 }
 
 impl Rand for int {

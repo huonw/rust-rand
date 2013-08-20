@@ -11,7 +11,7 @@ pub struct CMWC {
 }
 
 impl Rng for CMWC {
-    pub fn new() -> CMWC {
+    fn new() -> CMWC {
         let mut r = CMWC { q: [0, .. CMWC_N], c: 362436, i: CMWC_N - 1 };
 
         r.q[0] = 1;
