@@ -39,6 +39,9 @@ impl Rng for LFSR258 {
 
         self.z1 ^ self.z2 ^ self.z3 ^ self.z4 ^ self.z5
     }
+
+    #[inline]
+    fn entropy_u64(&self) -> uint { 8 }
 }
 ///  The initial seeds y1, y2, y3, y4, y5 MUST be larger than 1, 511,
 ///  4095, 131071 and 8388607 respectively.
@@ -86,6 +89,9 @@ impl Rng for LFSR113 {
 
         self.z1 ^ self.z2 ^ self.z3 ^ self.z4
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }
 
 impl SeedableRng<[u32, .. 4]> for LFSR113 {
@@ -126,6 +132,9 @@ impl Rng for Taus88 {
 
         return self.s1 ^ self.s2 ^ self.s3;
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }
 
 impl SeedableRng<[u32, .. 3]> for Taus88 {

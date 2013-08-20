@@ -45,4 +45,9 @@ impl ::Rng for OSSecureRng {
     fn next_u64(&mut self) -> u64 {
         self.handle.read_le_u64()
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
+    #[inline]
+    fn entropy_u64(&self) -> uint { 8 }
 }

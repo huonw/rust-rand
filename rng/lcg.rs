@@ -17,6 +17,9 @@ impl Rng for MinStd_Rand {
         self.x = x;
         x
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }
 
 impl SeedableRng<u32> for MinStd_Rand {
@@ -44,6 +47,9 @@ impl Rng for Rand48 {
         self.x = x;
         x
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }
 
 impl SeedableRng<u32> for Rand48 {

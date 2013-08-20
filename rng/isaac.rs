@@ -161,6 +161,9 @@ impl Rng for Isaac {
         self.cnt -= 1;
         unsafe { self.rsl.unsafe_get(self.cnt) }
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }
 
 trait IsaacSeed {
@@ -349,6 +352,9 @@ impl Rng for Isaac64 {
         self.cnt -= 1;
         unsafe { self.rsl.unsafe_get(self.cnt) }
     }
+
+    #[inline]
+    fn entropy_u64(&self) -> uint { 8 }
 }
 
 trait Isaac64Seed {

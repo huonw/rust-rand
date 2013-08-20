@@ -29,6 +29,9 @@ impl Rng for XorShift4 {
         self.w = w ^ (w >> 19) ^ (t ^ (t >> 8));
         self.w
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }
 
 impl SeedableRng<[u32, .. 4]> for XorShift4 {

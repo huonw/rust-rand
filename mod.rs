@@ -94,10 +94,12 @@ static SCALE_32: f32 = ((u32::max_value as f32) + 1.0f32);
 static SCALE_64: f64 = ((u64::max_value as f64) + 1.0f64);
 
 /// A random number generator. A type implementing `Rng` must
-/// implement at least one of `next_u32` and `next_u64`, and can
-/// optionally implement `next_f32` or `next_f64`, if, for instance,
-/// it can generate floating point numbers more efficiently than the
-/// default.
+/// implement at least one of `next_u32` and `next_u64`, and can optionally implement
+/// `next_f32` or `next_f64`, if, for instance, it can generate
+/// floating point numbers more efficiently than the default.
+///
+/// An implementor *must* implement the corresponding `entropy_`
+/// methods for any `next_` that are overridden.
 pub trait Rng {
     /// Create a new RNG, possibly with a system generated seed.
     ///
@@ -111,10 +113,25 @@ pub trait Rng {
     fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32
     }
+
+    /// The maximum number of bytes of entropy consumed to produce a
+    /// random u32 via `next_u32`.
+    #[inline]
+    fn entropy_u32(&self) -> uint {
+        self.entropy_u64()
+    }
+
     /// Return the next random u64.
     #[inline]
     fn next_u64(&mut self) -> u64 {
         self.next_u32() as u64 << 32 | self.next_u32() as u64
+    }
+
+    /// The maximum number of bytes of entropy consumed to produce a
+    /// random u64 via `next_u64`
+    #[inline]
+    fn entropy_u64(&self) -> uint {
+        2 * self.entropy_u32()
     }
 
     /// Return the next random f32.
@@ -123,10 +140,24 @@ pub trait Rng {
         (self.next_u32() as f32) / SCALE_32
     }
 
+    /// The maximum number of bytes of entropy consumed to produce a
+    /// random f32 via `next_f32`.
+    #[inline]
+    fn entropy_f32(&self) -> uint {
+        self.entropy_u32()
+    }
+
     /// Return the next random f64.
     #[inline]
     fn next_f64(&mut self) -> f64 {
         (self.next_u64() as f64) / SCALE_64
+    }
+
+    /// The maximum number of bytes of entropy consumed to produce a
+    /// random f64 via `next_f64`.
+    #[inline]
+    fn entropy_f64(&self) -> uint {
+        self.entropy_u64()
     }
 
     /// Return a random value for a Rand type

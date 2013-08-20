@@ -39,6 +39,9 @@ impl Rng for CMWC {
         unsafe { self.q.unsafe_set(self.i, q); }
         q
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }
 
 static MWC256_N: uint = 256;
@@ -66,4 +69,7 @@ impl Rng for MWC256 {
         self.c = (t >> 32) as u32;
         t as u32
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }

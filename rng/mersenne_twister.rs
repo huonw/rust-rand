@@ -58,6 +58,9 @@ impl Rng for MT19937 {
         y ^= (y << 15) & 0xefc60000;
         y ^ (y >> 18)
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 4 }
 }
 
 trait MT19937Seed { fn reseed(&self, &mut MT19937); }
