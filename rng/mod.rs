@@ -15,6 +15,7 @@ pub mod isaac;
 pub mod lcg;
 pub mod mwc;
 pub mod lfsr;
+pub mod reseeding;
 
 #[cfg(win32)]
 #[path="os_win.rs"]
