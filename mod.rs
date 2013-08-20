@@ -232,6 +232,23 @@ pub trait Rng {
     fn rand_iter(self) -> RandIterator<Self> {
         RandIterator::new(self)
     }
+
+    /// Randomly sample up to `n` elements from an iterator
+    fn sample<A, T: Iterator<A>>(&mut self, iter: T, n: uint) -> ~[A] {
+        let mut reservoir : ~[A] = vec::with_capacity(n);
+        for (i, elem) in iter.enumerate() {
+            if i < n {
+                reservoir.push(elem);
+                loop
+            }
+
+            let k = self.gen_integer_range(0, i + 1);
+            if k < reservoir.len() {
+                reservoir[k] = elem
+            }
+        }
+        reservoir
+    }
 }
 
 /// Random number generators that can be seeded with a scalar.
