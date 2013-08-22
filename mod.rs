@@ -8,7 +8,7 @@
 #[cfg(test)]
 extern mod extra;
 
-use std::{str, u64, u32, vec, local_data};
+use std::{str, u64, u32, vec, local_data, os};
 
 #[path="rng/mod.rs"]
 pub mod rng;
@@ -16,37 +16,75 @@ pub mod rng;
 #[path="distributions/mod.rs"]
 pub mod distributions;
 
-// used to make space in TLS for a random number generator
-static tls_rng_state: local_data::Key<@mut rng::StdRng> = &local_data::Key;
+/// Controls how the task-local RNG is reseeded.
+enum TaskRngReseeder {
+    WithNew,
+    DontReseed
+}
+impl rng::reseeding::Reseeder<rng::StdRng> for TaskRngReseeder {
+    fn new() -> TaskRngReseeder {
+        WithNew
+    }
+    fn reseed(&mut self, rng: &mut rng::StdRng) {
+        match *self {
+            WithNew => {
+                *rng = Rng::new();
+            }
+            DontReseed => {}
+        }
+    }
+}
+static TASK_RNG_RESEED_THRESHOLD: uint = 30_000;
+pub type TaskRng = rng::ReseedingRng<rng::StdRng, TaskRngReseeder>;
 
-/**
- * Gives back a lazily initialized task-local random number generator,
- * seeded by the system. Intended to be used in method chaining style, ie
- * `task_rng().gen::<int>()`.
- */
-#[inline]
-pub fn task_rng() -> @mut rng::StdRng {
-    let r = local_data::get(tls_rng_state, |k| k.map(|&k| *k));
+// used to make space in TLS for a random number generator
+static TASK_RNG_KEY: local_data::Key<@mut TaskRng> = &local_data::Key;
+
+
+
+/// Gives back a lazily initialized task-local random number
+/// generator, seeded by the system. Intended to be used in method
+/// chaining style, e.g.  `task_rng().gen::<int>()`.
+///
+/// The RNG provided will reseed itself from the operating system
+/// after generating a certain amount of randomness, unless it was
+/// explicitly seeded either by `seed_task_rng` or by setting the
+/// `RUST_SEED` environmental variable to some integer.
+pub fn task_rng() -> @mut TaskRng {
+    let r = local_data::get(TASK_RNG_KEY, |k| k.map(|&k| *k));
     match r {
         None => {
-            let rng = @mut Rng::new();
-            local_data::set(tls_rng_state, rng);
+            let seed = do os::getenv("RUST_SEED").chain |s| {
+                FromStr::from_str::<uint>(s)
+            };
+
+            let (sub_rng, reseeder) = match seed {
+                Some(seed) => (SeedableRng::from_seed(seed), DontReseed),
+                None => (Rng::new(), WithNew)
+            };
+
+            let rng = @mut rng::ReseedingRng::from_options(sub_rng,
+                                                           TASK_RNG_RESEED_THRESHOLD,
+                                                           reseeder);
+            local_data::set(TASK_RNG_KEY, rng);
             rng
         }
         Some(rng) => rng
     }
 }
 
-pub fn rng() -> rng::StdRng {
-    Rng::new()
-}
-
-pub fn seed<Seed: rng::StdSeed>(seed: Seed) {
-    (*task_rng()).reseed(seed)
+pub fn seed_task_rng<Seed: rng::StdSeed>(seed: Seed) {
+    let mut t_r = *task_rng();
+    t_r.reseed(seed);
+    t_r.reseeder = DontReseed;
 }
 
 pub fn random<R: Rand>() -> R {
     (*task_rng()).gen()
+}
+
+pub fn rng() -> rng::StdRng {
+    Rng::new()
 }
 
 

@@ -8,6 +8,9 @@ pub use self::isaac::{Isaac, Isaac64};
 pub use self::lcg::{MinStd_Rand, Rand48};
 pub use self::lfsr::{LFSR258, LFSR113, Taus88};
 pub use self::mwc::{CMWC, MWC256};
+pub use self::os::OSRng;
+pub use self::hardware::CPURng;
+pub use self::reseeding::ReseedingRng;
 
 pub mod xorshift;
 pub mod mersenne_twister;
