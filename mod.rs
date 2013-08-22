@@ -40,8 +40,6 @@ pub type TaskRng = rng::ReseedingRng<rng::StdRng, TaskRngReseeder>;
 // used to make space in TLS for a random number generator
 static TASK_RNG_KEY: local_data::Key<@mut TaskRng> = &local_data::Key;
 
-
-
 /// Gives back a lazily initialized task-local random number
 /// generator, seeded by the system. Intended to be used in method
 /// chaining style, e.g.  `task_rng().gen::<int>()`.
@@ -73,12 +71,45 @@ pub fn task_rng() -> @mut TaskRng {
     }
 }
 
+/// Explicitly seed (or reseed) the task-local random number
+/// generator. This stops the RNG from automatically reseeding itself.
+///
+/// # Example
+///
+/// ~~~ {.rust}
+/// use std::rand;
+///
+/// fn main() {
+///     rand::seed_task_rng(10u);
+///     printfln!("Same every time: %u", rand::random::<uint>());
+///
+///     rand::seed_task_rng([1u, 2, 3, 4, 5, 6, 7, 8]);
+///     printfln!("Same every time: %f", rand::random::<float>());
+/// }
+/// ~~~
 pub fn seed_task_rng<Seed: rng::StdSeed>(seed: Seed) {
     let mut t_r = *task_rng();
     t_r.reseed(seed);
     t_r.reseeder = DontReseed;
 }
 
+/// Generate a random value using the task-local random number
+/// generator.
+///
+/// # Example
+///
+/// ~~~ {.rust}
+/// use std::rand::random;
+///
+/// fn main() {
+///     if random() {
+///         let x = random();
+///         printfln!(2u * x);
+///     } else {
+///         printfln!(random::<float>());
+///     }
+/// }
+/// ~~~
 pub fn random<R: Rand>() -> R {
     (*task_rng()).gen()
 }
@@ -89,7 +120,21 @@ pub fn rng() -> rng::StdRng {
 
 
 /// A stream of random values.
+///
+/// # Example
+///
+/// ~~~{.rust}
+/// use std::rand;
+///
+/// fn main() {
+///     for x in rand::StdRng::new().rand_iter().take(10) {
+///         println(if x {"tick} else {"tock})
+///     }
+/// }
+/// ~~~
 struct RandIterator<R> {
+    /// The random number generator used to generate the random
+    /// values.
     rng: R
 }
 
@@ -105,18 +150,23 @@ impl<R: Rng, X: Rand> std::iterator::Iterator<X> for RandIterator<R> {
     }
 }
 
-/// Values that can be randomly generated.
+/// Values that can be randomly generated. Note that there is no way
+/// to pass parameters to generate these values, so they must have
+/// some sensible default distribution.
 pub trait Rand {
-    /// Generated a random value with the given random number
-    /// generator.
+    /// Generate a random value using the given random number
+    /// generator as a source of randomness.
     fn rand<R: Rng>(rng: &mut R) -> Self;
 
-    /// Create a vector of length `len` filled with random values.
+    /// Create a vector of length `len` filled with random values
+    /// using `rng` as a source of randomness. This only needs to be
+    /// overriden if there is a more efficient method than just call
+    /// `rand` `len` times.
     fn rand_vec<R: Rng>(rng: &mut R, len: uint) -> ~[Self] {
         vec::from_fn(len, |_| rng.gen())
     }
 
-    /// Fill a preallocated vector with random values.
+    /// Fill a pre-allocated vector with random values.
     fn fill_vec<R: Rng>(rng: &mut R, v: &mut [Self]) {
         for idx in v.mut_iter() {
             *idx = rng.gen();
@@ -131,13 +181,18 @@ static GEN_ASCII_STR_CHARSET: &'static [u8] = bytes!("ABCDEFGHIJKLMNOPQRSTUVWXYZ
 static SCALE_32: f32 = ((u32::max_value as f32) + 1.0f32);
 static SCALE_64: f64 = ((u64::max_value as f64) + 1.0f64);
 
-/// A random number generator. A type implementing `Rng` must
-/// implement at least one of `next_u32` and `next_u64`, and can optionally implement
-/// `next_f32` or `next_f64`, if, for instance, it can generate
-/// floating point numbers more efficiently than the default.
+/// A random number generator.
 ///
-/// An implementor *must* implement the corresponding `entropy_`
-/// methods for any `next_` that are overridden.
+/// A type implementing `Rng` must implement at least one of
+/// `next_u32` and `next_u64`, and can optionally implement `next_f32`
+/// or `next_f64`, if, for instance, it can generate floating point
+/// numbers more efficiently than the default.
+///
+/// An implementor *must* implement the corresponding `entropy`
+/// methods for any `next` that are overridden. The `entropy` methods
+/// are designed to provide an estimate of the randomness used to
+/// produce a random quantity of the corresponding type. These are
+/// used by `ReseedingRng` to determine when to reseed.
 pub trait Rng {
     /// Create a new RNG, possibly with a system generated seed.
     ///
@@ -198,20 +253,68 @@ pub trait Rng {
         self.entropy_u64()
     }
 
-    /// Return a random value for a Rand type
+    /// Return a random value of a Rand type.
+    ///
+    /// # Example
+    ///
+    /// ~~~ {.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///    let rng = rand::task_rng();
+    ///    let x: uint = rng.gen();
+    ///    printfln!(x);
+    ///    printfln!(rng.gen::<(float, bool)>());
+    /// }
+    /// ~~~
     #[inline(always)]
     fn gen<T: Rand>(&mut self) -> T {
         Rand::rand(self)
     }
 
-    /// Return a random byte string of the specified length. This does
-    /// not necessarily give the same result as calling `gen()` `len`
-    /// times.
+    /// Return a random vector of the specified length. This defers to
+    /// the `rand_vec` implementation of the requested type, and, as
+    /// such, does not necessarily give the same result as calling
+    /// `gen()` `len` times.
+    ///
+    /// # Example
+    ///
+    /// ~~~ {.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///    let rng = rand::task_rng();
+    ///    let x: ~[uint] = rng.gen_vec(10);
+    ///    printfln!(x);
+    ///    printfln!(rng.gen_vec::<(float, bool)>(5));
+    /// }
+    /// ~~~
     fn gen_vec<T: Rand>(&mut self, len: uint) -> ~[T] {
         Rand::rand_vec(self, len)
     }
 
-    /// Generate a random integer in the range [`low`, `high`).
+    /// Generate a random primitive integer in the range [`low`,
+    /// `high`). Fails if `low >= high`.
+    ///
+    /// This gives a uniform distribution (assuming this RNG is itself
+    /// uniform), even for edge cases like `gen_integer_range(0u8,
+    /// 170)`, which a naive modulo operation would return numbers
+    /// less than 85 with double the probability to those greater than
+    /// 85.
+    ///
+    /// # Example
+    ///
+    /// ~~~ {.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///    let rng = rand::task_rng();
+    ///    let n: uint = rng.gen_integer_range(0u, 10);
+    ///    printfln!(n);
+    ///    let m: i16 = rng.gen_integer_range(-40, 400);
+    ///    printfln!(m);
+    /// }
+    /// ~~~
     fn gen_integer_range<T: Rand + Int>(&mut self, low: T, high: T) -> T {
         assert!(low < high, "RNG.gen_range called with low >= high");
         let range = (high - low).to_u64();
@@ -224,9 +327,18 @@ pub trait Rng {
         }
     }
 
-    /**
-     * Return a random string of the specified length composed of A-Z,a-z,0-9
-     */
+    /// Return a random string of the specified length composed of
+    /// A-Z,a-z,0-9.
+    ///
+    /// # Example
+    ///
+    /// ~~~ {.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///    println(rand::task_rng().gen_ascii_str(10));
+    /// }
+    /// ~~~
     fn gen_ascii_str(&mut self, len: uint) -> ~str {
         let mut s = str::with_capacity(len);
         for _ in range(0, len) {
@@ -235,11 +347,19 @@ pub trait Rng {
         s
     }
 
-    fn choose_nonempty<'a, T>(&mut self, values: &'a [T]) -> &'a T {
-        self.choose(values).expect("Rng.choose_nonempty called with empty `values`")
-    }
-
-    /// Choose Some(&item) randomly, returning None if values is empty
+    /// Choose `Some(&item)` randomly, returning `None` if values is
+    /// empty.
+    ///
+    /// # Example
+    ///
+    /// ~~~ {.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///     printfln!(rand::task_rng().choose([1,2,4,8,16,32]));
+    ///     printfln!(rand::task_rng().choose([]));
+    /// }
+    /// ~~~
     fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
         if values.is_empty() {
             None
@@ -248,14 +368,39 @@ pub trait Rng {
         }
     }
 
-    /// Shuffle a vector.
+    /// Shuffle a vec
+    ///
+    /// # Example
+    ///
+    /// ~~~ {.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///     printfln!(rand::task_rng().shuffle(~[1,2,3]));
+    /// }
+    /// ~~~
     fn shuffle<T>(&mut self, values: ~[T]) -> ~[T] {
         let mut v = values;
         self.shuffle_mut(v);
         v
     }
 
-    /// Shuffle a mutable vec in place
+    /// Shuffle a mutable vector in place.
+    ///
+    /// # Example
+    ///
+    /// ~~~ {.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///    let rng = rand::task_rng();
+    ///    let mut y = [1,2,3];
+    ///    rng.shuffle_mut(y);
+    ///    printfln!(y);
+    ///    rng.shuffle_mut(y);
+    ///    printfln!(y);
+    /// }
+    /// ~~~
     fn shuffle_mut<T>(&mut self, values: &mut [T]) {
         let mut i = values.len();
         while i >= 2u {
@@ -267,11 +412,37 @@ pub trait Rng {
     }
 
     /// Create an iterator of random values.
+    ///
+    /// # Example
+    ///
+    /// # Example
+    ///
+    /// ~~~{.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///     for x in rand::StdRng::new().rand_iter().take(10) {
+    ///         println(if x {"tick} else {"tock})
+    ///     }
+    /// }
+    /// ~~~
     fn rand_iter(self) -> RandIterator<Self> {
         RandIterator::new(self)
     }
 
-    /// Randomly sample up to `n` elements from an iterator
+    /// Randomly sample up to `n` elements from an iterator.
+    ///
+    /// # Example
+    ///
+    /// ~~~ {.rust}
+    /// use std::rand;
+    ///
+    /// fn main() {
+    ///    let rng = rand::task_rng();
+    ///    let sample = rng.sample(range(1, 100), 5);
+    ///    printfln!(sample);
+    /// }
+    /// ~~~
     fn sample<A, T: Iterator<A>>(&mut self, iter: T, n: uint) -> ~[A] {
         let mut reservoir : ~[A] = vec::with_capacity(n);
         for (i, elem) in iter.enumerate() {
@@ -289,7 +460,8 @@ pub trait Rng {
     }
 }
 
-/// Random number generators that can be seeded with a scalar.
+/// Random number generators that can be seeded to produce the same
+/// stream of randomness multiple times.
 pub trait SeedableRng<Seed>: Rng {
     /// Reseed with the given seed.
     fn reseed(&mut self, Seed);
