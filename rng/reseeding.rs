@@ -2,13 +2,19 @@
 //! certain amount of entropy.
 
 use Rng;
+use SeedableRng;
+
+/// How many bytes of entropy the underling RNG is allowed to consume
+/// before it is reseeded.
+static DEFAULT_ENTROPY_THRESHOLD: uint = 32 * 1024;
 
 /// A wrapper around an RNG that reseeds itself after the underlying
 /// RNG has used a given amount of entropy.
 pub struct ReseedingRng<R, Rsdr> {
-    rng: R,
-    entropy_threshold: uint,
-    entropy_used: uint,
+    priv rng: R,
+    priv entropy_threshold: uint,
+    priv entropy_used: uint,
+    /// Controls the behaviour when reseeding the RNG.
     reseeder: Rsdr
 }
 
@@ -44,7 +50,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     fn new() -> ReseedingRng<R, Rsdr> {
         ReseedingRng {
             rng: Rng::new::<R>(),
-            entropy_threshold: 16,
+            entropy_threshold: DEFAULT_ENTROPY_THRESHOLD,
             entropy_used: 0,
             reseeder: Reseeder::new::<R, Rsdr>()
         }
@@ -87,6 +93,20 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     }
 }
 
+impl<Seed, R: SeedableRng<Seed>, Rsdr: Reseeder<R>>
+    SeedableRng<Seed> for ReseedingRng<R, Rsdr> {
+
+    fn reseed(&mut self, seed: Seed) {
+        self.rng.reseed(seed)
+    }
+
+    fn from_seed(seed: Seed) -> ReseedingRng<R, Rsdr> {
+        ReseedingRng::from_options(SeedableRng::from_seed(seed),
+                                   DEFAULT_ENTROPY_THRESHOLD,
+                                   Reseeder::new())
+    }
+}
+
 /// Something that can be used to reseed an RNG.
 pub trait Reseeder<R> {
     /// Create a default instance.
@@ -96,7 +116,7 @@ pub trait Reseeder<R> {
     fn reseed(&mut self, rng: &mut R);
 }
 
-/// Reseed an RNG using it's `new` static method.
+/// Reseed an RNG using its `new` static method.
 pub struct ReseedWithNew;
 
 impl<R: Rng> Reseeder<R> for ReseedWithNew {
@@ -106,6 +126,8 @@ impl<R: Rng> Reseeder<R> for ReseedWithNew {
         *rng = Rng::new();
     }
 }
+
+// Implement all the different function types for flexibility.
 
 impl<R> Reseeder<R> for ~fn(&mut R) {
     fn new() -> ~fn(&mut R) { |_| {} }
