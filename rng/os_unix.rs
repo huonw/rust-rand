@@ -1,5 +1,8 @@
 use std::{io};
 
+// these don't consume any entropy at the Rust level, hence just set
+// entropy_* == 0.
+
 pub struct OSRng {
     handle: @io::Reader
 }
@@ -18,6 +21,11 @@ impl ::Rng for OSRng {
     fn next_u64(&mut self) -> u64 {
         self.handle.read_le_u64()
     }
+
+    #[inline]
+    fn entropy_u32(&self) -> uint { 0 }
+    #[inline]
+    fn entropy_u64(&self) -> uint { 0 }
 }
 
 impl OSRng {
@@ -47,7 +55,7 @@ impl ::Rng for OSSecureRng {
     }
 
     #[inline]
-    fn entropy_u32(&self) -> uint { 4 }
+    fn entropy_u32(&self) -> uint { 0 }
     #[inline]
-    fn entropy_u64(&self) -> uint { 8 }
+    fn entropy_u64(&self) -> uint { 0 }
 }
