@@ -5,6 +5,57 @@
 
 #[crate_type="lib"];
 
+/*!
+Random number generation.
+
+The key functions are `random()` and `Rng::gen()`. These are polymorphic
+and so can be used to generate any type that implements `Rand`. Type inference
+means that often a simple call to `rand::random()` or `rng.gen()` will
+suffice, but sometimes an annotation is required, e.g. `rand::random::<float>()`.
+
+See the `distributions` submodule for sampling random numbers from
+distributions like normal and exponential.
+
+# Task-local RNG
+
+There is built-in support for a RNG associated with each task stored
+in task-local storage. This RNG can be accessed via `task_rng`, or
+used implicitly via `random`. This RNG is normally randomly seeded
+from an operating-system source of randomness, e.g. `/dev/urandom` on
+Unix systems, and will automatically reseed itself from this source
+after generating 32 KiB of random data.
+
+It can be explicitly seeded on a per-task basis with `seed_task_rng`;
+this only affects the task-local generator in the task in which it is
+called. It can be seeded globally using the `RUST_SEED` environment
+variable, which should be an integer. Setting `RUST_SEED` will seed
+every task-local RNG with the same seed. Using either of these will
+disable the automatic reseeding.
+
+# Examples
+
+~~~ {.rust}
+use std::rand;
+
+fn main() {
+    let mut rng = rand::task_rng();
+    if rng.gen() { // bool
+        printfln!("int: %d, uint: %u", rng.gen(), rng.gen())
+    }
+}
+~~~
+
+~~~ {.rust}
+use std::rand;
+
+fn main () {
+    let tuple_ptr = rand::random::<~(f64, char)>();
+    printfln!(tuple_ptr)
+}
+~~~
+*/
+
+
 #[cfg(test)]
 extern mod extra;
 
@@ -18,7 +69,9 @@ pub mod distributions;
 
 /// Controls how the task-local RNG is reseeded.
 enum TaskRngReseeder {
+    /// Reseed using the standard Rng::new() function.
     WithNew,
+    /// Don't reseed at all.
     DontReseed
 }
 impl rng::reseeding::Reseeder<rng::StdRng> for TaskRngReseeder {
@@ -34,20 +87,25 @@ impl rng::reseeding::Reseeder<rng::StdRng> for TaskRngReseeder {
         }
     }
 }
-static TASK_RNG_RESEED_THRESHOLD: uint = 30_000;
+static TASK_RNG_RESEED_THRESHOLD: uint = 32_768;
+/// The task-local RNG.
 pub type TaskRng = rng::ReseedingRng<rng::StdRng, TaskRngReseeder>;
 
 // used to make space in TLS for a random number generator
 static TASK_RNG_KEY: local_data::Key<@mut TaskRng> = &local_data::Key;
 
-/// Gives back a lazily initialized task-local random number
+/// Retrieve the lazily-initialized task-local random number
 /// generator, seeded by the system. Intended to be used in method
-/// chaining style, e.g.  `task_rng().gen::<int>()`.
+/// chaining style, e.g. `task_rng().gen::<int>()`.
 ///
 /// The RNG provided will reseed itself from the operating system
 /// after generating a certain amount of randomness, unless it was
 /// explicitly seeded either by `seed_task_rng` or by setting the
 /// `RUST_SEED` environmental variable to some integer.
+///
+/// The internal RNG used is platform and architecture dependent, so
+/// may yield differing sequences on different computers, even when
+/// explicitly seeded with `seed_task_rng`.
 pub fn task_rng() -> @mut TaskRng {
     let r = local_data::get(TASK_RNG_KEY, |k| k.map(|&k| *k));
     match r {
@@ -83,7 +141,7 @@ pub fn task_rng() -> @mut TaskRng {
 ///     rand::seed_task_rng(10u);
 ///     printfln!("Same every time: %u", rand::random::<uint>());
 ///
-///     rand::seed_task_rng([1u, 2, 3, 4, 5, 6, 7, 8]);
+///     rand::seed_task_rng(&[1u, 2, 3, 4, 5, 6, 7, 8]);
 ///     printfln!("Same every time: %f", rand::random::<float>());
 /// }
 /// ~~~
@@ -139,7 +197,8 @@ struct RandIterator<R> {
 }
 
 impl<R:Rng> RandIterator<R> {
-    fn new(rng: R) -> RandIterator<R> {
+    /// Create a new `RandIterator` from an RNG.
+    pub fn new(rng: R) -> RandIterator<R> {
         RandIterator { rng: rng }
     }
 }
@@ -153,23 +212,32 @@ impl<R: Rng, X: Rand> std::iterator::Iterator<X> for RandIterator<R> {
 /// Values that can be randomly generated. Note that there is no way
 /// to pass parameters to generate these values, so they must have
 /// some sensible default distribution.
+///
+/// An implementor must implement `rand`, and can implement `rand_vec`
+/// and/or `fill_vec` if they have a more efficient implementation
+/// than just calling `rand` repeatedly.
 pub trait Rand {
     /// Generate a random value using the given random number
     /// generator as a source of randomness.
     fn rand<R: Rng>(rng: &mut R) -> Self;
 
     /// Create a vector of length `len` filled with random values
-    /// using `rng` as a source of randomness. This only needs to be
-    /// overriden if there is a more efficient method than just call
-    /// `rand` `len` times.
+    /// using `rng` as a source of randomness.
+    ///
+    /// There is no guarantee that the output will be the same as
+    /// calling `rand` `len` times.
     fn rand_vec<R: Rng>(rng: &mut R, len: uint) -> ~[Self] {
-        vec::from_fn(len, |_| rng.gen())
+        vec::from_fn(len, |_| Rand::rand(rng))
     }
 
-    /// Fill a pre-allocated vector with random values.
+    /// Fill a pre-allocated vector with random values using `rng` as
+    /// the source of randomness.
+    ///
+    /// There is no guarantee that the output will be the same as
+    /// calling `rand` `v.len()` times.
     fn fill_vec<R: Rng>(rng: &mut R, v: &mut [Self]) {
         for idx in v.mut_iter() {
-            *idx = rng.gen();
+            *idx = Rand::rand(rng);
         }
     }
 }
@@ -193,6 +261,10 @@ static SCALE_64: f64 = ((u64::max_value as f64) + 1.0f64);
 /// are designed to provide an estimate of the randomness used to
 /// produce a random quantity of the corresponding type. These are
 /// used by `ReseedingRng` to determine when to reseed.
+///
+/// Users should normally call `gen` to generate new random numbers:
+/// the `next` methods are designed to allow for maximally efficient
+/// implementations of `Rand` for types.
 pub trait Rng {
     /// Create a new RNG, possibly with a system generated seed.
     ///
@@ -415,14 +487,12 @@ pub trait Rng {
     ///
     /// # Example
     ///
-    /// # Example
-    ///
     /// ~~~{.rust}
     /// use std::rand;
     ///
     /// fn main() {
     ///     for x in rand::StdRng::new().rand_iter().take(10) {
-    ///         println(if x {"tick} else {"tock})
+    ///         println(if x {"tick"} else {"tock"})
     ///     }
     /// }
     /// ~~~
