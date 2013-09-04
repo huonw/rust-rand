@@ -29,6 +29,8 @@ pub mod os;
 pub mod os;
 pub mod hardware;
 
+/// Create a random seed. This transmutes a raw byte vector and so
+/// should only be used with types for which any bit pattern is safe.
 pub unsafe fn seed<T>(len: uint) -> ~[T] {
     let byte_size = len * sys::nonzero_size_of::<T>();
     let mut vec = vec::from_elem(byte_size, 0u8);
@@ -38,9 +40,13 @@ pub unsafe fn seed<T>(len: uint) -> ~[T] {
     cast::transmute(vec)
 }
 
+/// The standard RNG. This is designed to be efficient on the current
+/// platform.
 #[cfg(not(target_word_size="64"))]
 pub struct StdRng { priv rng: Isaac }
 
+/// The standard RNG. This is designed to be efficient on the current
+/// platform.
 #[cfg(target_word_size="64")]
 pub struct StdRng { priv rng: Isaac64 }
 
