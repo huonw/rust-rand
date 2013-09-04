@@ -41,7 +41,8 @@ impl MT19937 {
 
 impl Rng for MT19937 {
     fn new() -> MT19937 {
-        SeedableRng::from_seed::<&[u32], MT19937>(unsafe { seed(MT_N) })
+        let s = unsafe { seed::<u32>(MT_N) };
+        SeedableRng::from_seed(s.as_slice())
     }
 
     #[inline]
@@ -153,7 +154,8 @@ impl MT19937_64 {
 
 impl Rng for MT19937_64 {
     fn new() -> MT19937_64 {
-        SeedableRng::from_seed::<&[u64], MT19937_64>(unsafe { seed(MT64_N) })
+        let s = unsafe { seed::<u64>(MT64_N) };
+        SeedableRng::from_seed(s.as_slice())
     }
 
     #[inline]
@@ -237,7 +239,8 @@ pub struct WELL512 {
 
 impl Rng for WELL512 {
     fn new() -> WELL512 {
-        SeedableRng::from_seed::<&[u32], WELL512>(unsafe { seed(WELL512_N) })
+        let s = unsafe { seed::<u32>(WELL512_N) };
+        SeedableRng::from_seed(s.as_slice())
     }
 
     #[inline]

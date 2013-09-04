@@ -110,8 +110,8 @@ pub fn task_rng() -> @mut TaskRng {
     let r = local_data::get(TASK_RNG_KEY, |k| k.map(|&k| *k));
     match r {
         None => {
-            let seed = do os::getenv("RUST_SEED").chain |s| {
-                FromStr::from_str::<uint>(s)
+            let seed: Option<uint> = do os::getenv("RUST_SEED").chain |s| {
+                FromStr::from_str(s)
             };
 
             let (sub_rng, reseeder) = match seed {

@@ -49,10 +49,10 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
 impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     fn new() -> ReseedingRng<R, Rsdr> {
         ReseedingRng {
-            rng: Rng::new::<R>(),
+            rng: Rng::new(),
             entropy_threshold: DEFAULT_ENTROPY_THRESHOLD,
             entropy_used: 0,
-            reseeder: Reseeder::new::<R, Rsdr>()
+            reseeder: Reseeder::new()
         }
     }
 

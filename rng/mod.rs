@@ -35,7 +35,8 @@ pub unsafe fn seed<T>(len: uint) -> ~[T] {
     let byte_size = len * sys::nonzero_size_of::<T>();
     let mut vec = vec::from_elem(byte_size, 0u8);
 
-    Rng::new::<os::OSRng>().fill_vec(vec);
+    let rng: OSRng = Rng::new();
+    rng.fill_vec(vec);
 
     cast::transmute(vec)
 }
