@@ -49,7 +49,7 @@ fn main() {
 use std::rand;
 
 fn main () {
-    let tuple_ptr = rand::random::<~(f64, char)>();
+    let tuple_ptr = rand::random::<~(f64, u16)>();
     printfln!(tuple_ptr)
 }
 ~~~
@@ -635,13 +635,6 @@ impl Rand for f64 {
     #[inline(always)]
     fn rand<R: Rng>(rng: &mut R) -> f64 {
         rng.next_f64()
-    }
-}
-
-impl Rand for char {
-    #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> char {
-        rng.next_u32() as char
     }
 }
 
