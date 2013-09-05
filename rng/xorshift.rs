@@ -11,13 +11,15 @@ pub struct XorShift4 {
     priv w: u32,
 }
 
-impl Rng for XorShift4 {
+impl XorShift4 {
     /// Create an xor shift random number generator with a default seed.
-    fn new() -> XorShift4 {
+    pub fn new() -> XorShift4 {
         // constants taken from http://en.wikipedia.org/wiki/Xorshift
         SeedableRng::from_seed([123456789, 362436069, 521288629, 88675123])
     }
+}
 
+impl Rng for XorShift4 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let x = self.x;

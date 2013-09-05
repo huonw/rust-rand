@@ -20,7 +20,7 @@ pub struct OSRng {
 }
 
 impl Rng for OSRng {
-    fn new() -> OSRng {
+    pub fn new() -> OSRng {
 
         let hcp = ptr::mut_null();
         // TODO these two 0 constants are incorrect!
@@ -61,7 +61,7 @@ pub struct OSSecureRng {
 }
 
 impl Rng for OSSecureRng {
-    fn new() -> OSSecureRng {
+    pub fn new() -> OSSecureRng {
         OSSecureRng { inner: OSRng::new() }
     }
 

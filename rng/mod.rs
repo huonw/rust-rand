@@ -35,7 +35,7 @@ pub unsafe fn seed<T>(len: uint) -> ~[T] {
     let byte_size = len * sys::nonzero_size_of::<T>();
     let mut vec = vec::from_elem(byte_size, 0u8);
 
-    let rng: OSRng = Rng::new();
+    let rng: OSRng = OSRng::new();
     rng.fill_vec(vec);
 
     cast::transmute(vec)
@@ -51,12 +51,18 @@ pub struct StdRng { priv rng: Isaac }
 #[cfg(target_word_size="64")]
 pub struct StdRng { priv rng: Isaac64 }
 
+impl StdRng {
+    #[cfg(not(target_word_size="64"))]
+    pub fn new() -> StdRng {
+        StdRng { rng: Isaac::new() }
+    }
+    #[cfg(target_word_size="64")]
+    pub fn new() -> StdRng {
+        StdRng { rng: Isaac64::new() }
+    }
+}
 
 impl Rng for StdRng {
-    fn new() -> StdRng {
-        StdRng { rng: Rng::new() }
-    }
-
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.rng.next_u32()

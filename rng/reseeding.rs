@@ -47,15 +47,6 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
 
 
 impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
-    fn new() -> ReseedingRng<R, Rsdr> {
-        ReseedingRng {
-            rng: Rng::new(),
-            entropy_threshold: DEFAULT_ENTROPY_THRESHOLD,
-            entropy_used: 0,
-            reseeder: Reseeder::new()
-        }
-    }
-
     fn next_u32(&mut self) -> u32 {
         self.reseed_if_necessary();
         self.entropy_used += self.rng.entropy_u32();
@@ -123,7 +114,8 @@ impl<R: Rng> Reseeder<R> for ReseedWithNew {
     fn new() -> ReseedWithNew { ReseedWithNew }
 
     fn reseed(&mut self, rng: &mut R) {
-        *rng = Rng::new();
+        // FIXME
+        // *rng = Rng::new();
     }
 }
 

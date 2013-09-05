@@ -39,12 +39,14 @@ impl MT19937 {
 }
 
 
-impl Rng for MT19937 {
-    fn new() -> MT19937 {
+impl MT19937 {
+    pub fn new() -> MT19937 {
         let s = unsafe { seed::<u32>(MT_N) };
         SeedableRng::from_seed(s.as_slice())
     }
+}
 
+impl Rng for MT19937 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         if self.index >= MT_N {
@@ -152,12 +154,14 @@ impl MT19937_64 {
     }
 }
 
-impl Rng for MT19937_64 {
-    fn new() -> MT19937_64 {
+impl MT19937_64 {
+    pub fn new() -> MT19937_64 {
         let s = unsafe { seed::<u64>(MT64_N) };
         SeedableRng::from_seed(s.as_slice())
     }
+}
 
+impl Rng for MT19937_64 {
     #[inline]
     fn next_u64(&mut self) -> u64 {
         if self.index >= MT64_N {
@@ -237,12 +241,14 @@ pub struct WELL512 {
     priv index: uint
 }
 
-impl Rng for WELL512 {
-    fn new() -> WELL512 {
+impl WELL512 {
+    pub fn new() -> WELL512 {
         let s = unsafe { seed::<u32>(WELL512_N) };
         SeedableRng::from_seed(s.as_slice())
     }
+}
 
+impl Rng for WELL512 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let mut a;

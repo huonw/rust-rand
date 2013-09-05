@@ -144,13 +144,15 @@ impl Isaac {
     }
 }
 
-impl Rng for Isaac {
+impl Isaac {
     /// Create an ISAAC random number generator with a random seed.
-    fn new() -> Isaac {
+    pub fn new() -> Isaac {
         let s = unsafe { seed::<u32>(RAND_SIZE) };
         SeedableRng::from_seed(s.as_slice())
     }
+}
 
+impl Rng for Isaac {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         if self.cnt == 0 {
@@ -337,12 +339,14 @@ impl Isaac64 {
     }
 }
 
-impl Rng for Isaac64 {
-    fn new() -> Isaac64 {
+impl Isaac64 {
+    pub fn new() -> Isaac64 {
         let s = unsafe { seed::<u64>(RAND_SIZE_64) };
         SeedableRng::from_seed(s.as_slice())
     }
+}
 
+impl Rng for Isaac64 {
     #[inline]
     fn next_u64(&mut self) -> u64 {
         if self.cnt == 0 {

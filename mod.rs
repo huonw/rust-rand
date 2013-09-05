@@ -81,7 +81,8 @@ impl rng::reseeding::Reseeder<rng::StdRng> for TaskRngReseeder {
     fn reseed(&mut self, rng: &mut rng::StdRng) {
         match *self {
             WithNew => {
-                *rng = Rng::new();
+                // FIXME
+                // *rng = Rng::new();
             }
             DontReseed => {}
         }
@@ -116,7 +117,7 @@ pub fn task_rng() -> @mut TaskRng {
 
             let (sub_rng, reseeder) = match seed {
                 Some(seed) => (SeedableRng::from_seed(seed), DontReseed),
-                None => (Rng::new(), WithNew)
+                None => (rng::StdRng::new(), WithNew)
             };
 
             let rng = @mut rng::ReseedingRng::from_options(sub_rng,
@@ -173,7 +174,7 @@ pub fn random<R: Rand>() -> R {
 }
 
 pub fn rng() -> rng::StdRng {
-    Rng::new()
+    rng::StdRng::new()
 }
 
 
@@ -266,13 +267,6 @@ static SCALE_64: f64 = ((u64::max_value as f64) + 1.0f64);
 /// the `next` methods are designed to allow for maximally efficient
 /// implementations of `Rand` for types.
 pub trait Rng {
-    /// Create a new RNG, possibly with a system generated seed.
-    ///
-    /// This can, but is not guaranteed to, randomly seed the RNG;
-    /// since some RNGs only have good randomness properties for
-    /// certain initial seeds, and others cannot be seeded.
-    fn new() -> Self;
-
     /// Return the next random u32.
     #[inline]
     fn next_u32(&mut self) -> u32 {

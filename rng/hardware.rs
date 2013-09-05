@@ -31,15 +31,12 @@ impl CPURng {
 
     /// Create a new CPURng, returning `None` if it is not supported.
     pub fn try_new() -> Option<CPURng> {
-        if CPURng::is_supported() {Some(Rng::new())} else {None}
+        if CPURng::is_supported() {Some(CPURng { force_use_of_new: () })} else {None}
     }
 }
 
 #[cfg(target_arch="x86_64")]
 impl Rng for CPURng {
-    fn new() -> CPURng {
-        CPURng::try_new().expect("CPURng not supported")
-    }
     fn next_u64(&mut self) -> u64 {
         static NEXT_U64_ATTEMPTS: uint = 3;
 

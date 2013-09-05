@@ -5,12 +5,13 @@ use rng::seed;
 pub struct MinStd_Rand {
     priv x: u32
 }
-
-impl Rng for MinStd_Rand {
-    fn new() -> MinStd_Rand {
+impl MinStd_Rand {
+    pub fn new() -> MinStd_Rand {
         SeedableRng::from_seed(unsafe {seed(1)}[0])
     }
+}
 
+impl Rng for MinStd_Rand {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let x = (self.x * 48271) % 2147483647;
@@ -36,11 +37,13 @@ pub struct Rand48 {
     priv x: u32
 }
 
-impl Rng for Rand48 {
-    fn new() -> Rand48 {
+impl Rand48 {
+    pub fn new() -> Rand48 {
         SeedableRng::from_seed(unsafe {seed(1)}[0])
     }
+}
 
+impl Rng for Rand48 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let x = ((0x5DEECE66D * self.x as u64 + 0xB) % 0x1_0000_0000_0000) as u32;

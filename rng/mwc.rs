@@ -10,8 +10,8 @@ pub struct CMWC {
     priv i: uint
 }
 
-impl Rng for CMWC {
-    fn new() -> CMWC {
+impl CMWC {
+    pub fn new() -> CMWC {
         let mut r = CMWC { q: [0, .. CMWC_N], c: 362436, i: CMWC_N - 1 };
 
         r.q[0] = 1;
@@ -24,7 +24,9 @@ impl Rng for CMWC {
 
         r
     }
+}
 
+impl Rng for CMWC {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.i = (self.i + 1) & (CMWC_N - 1);
@@ -53,15 +55,17 @@ pub struct MWC256 {
     priv i: u8
 }
 
-impl Rng for MWC256 {
-    fn new() -> MWC256 {
+impl MWC256 {
+    pub fn new() -> MWC256 {
         MWC256 {
             q: [1, .. MWC256_N],
             c: 362436,
             i: 255
         }
     }
+}
 
+impl Rng for MWC256 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.i += 1;

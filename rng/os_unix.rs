@@ -7,14 +7,16 @@ pub struct OSRng {
     handle: @io::Reader
 }
 
-impl ::Rng for OSRng {
-    fn new() -> OSRng {
+impl OSRng {
+    pub fn new() -> OSRng {
         match io::file_reader(&Path("/dev/urandom")) {
             Err(e) => fail!("error opening /dev/urandom: %s", e),
             Ok(urandom) => OSRng { handle: urandom }
         }
     }
+}
 
+impl ::Rng for OSRng {
     fn next_u32(&mut self) -> u32 {
         self.handle.read_le_u32()
     }
@@ -39,14 +41,16 @@ pub struct OSSecureRng {
     handle: @io::Reader
 }
 
-impl ::Rng for OSSecureRng {
-    fn new() -> OSSecureRng {
+impl OSSecureRng {
+    pub fn new() -> OSSecureRng {
         match io::file_reader(&Path("/dev/random")) {
             Err(e) => fail!("error opening /dev/random: %s", e),
             Ok(random) => OSSecureRng { handle: random }
         }
     }
+}
 
+impl ::Rng for OSSecureRng {
     fn next_u32(&mut self) -> u32 {
         self.handle.read_le_u32()
     }

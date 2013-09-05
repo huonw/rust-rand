@@ -17,8 +17,8 @@ pub struct LFSR258 {
 
 /// Minimum values of the seeds of a LFSR258 generator
 static LFSR258_LIMITS: [u64, .. 5] = [1, 511, 4095, 131071, 8388607];
-impl Rng for LFSR258 {
-    fn new() -> LFSR258 {
+impl LFSR258 {
+    pub fn new() -> LFSR258 {
         let mut s = [0, .. 5];
         let rand = unsafe { seed::<u64>(5) };
         for i in range(0, 5) {
@@ -28,7 +28,9 @@ impl Rng for LFSR258 {
         }
         SeedableRng::from_seed(s)
     }
+}
 
+impl Rng for LFSR258 {
     #[inline]
     fn next_u64(&mut self) -> u64 {
         step!(self.z1,  1, 53, 18446744073709551614, 10);
@@ -74,12 +76,14 @@ pub struct LFSR113 {
     priv z4: u32
 }
 
-impl Rng for LFSR113 {
-    fn new() -> LFSR113 {
+impl LFSR113 {
+    pub fn new() -> LFSR113 {
         let seed = unsafe { seed::<u32>(4) };
         SeedableRng::from_seed([seed[0], seed[1], seed[2], seed[3]])
     }
+}
 
+impl Rng for LFSR113 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         step!(self.z1,  6, 13, 4294967294, 18);
@@ -118,12 +122,14 @@ pub struct Taus88 {
     priv s3: u32
 }
 
-impl Rng for Taus88 {
-     fn new() -> Taus88 { // TODO: seeds?
+impl Taus88 {
+     pub fn new() -> Taus88 { // TODO: seeds?
          let seed = unsafe { seed::<u32>(3) };
          SeedableRng::from_seed([seed[0], seed[1], seed[2]])
     }
+}
 
+impl Rng for Taus88 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         step!(self.s1, 13, 19, 4294967294, 12);
