@@ -117,7 +117,7 @@ pub fn task_rng() -> @mut TaskRng {
 
             let (sub_rng, reseeder) = match seed {
                 Some(seed) => (SeedableRng::from_seed(seed), DontReseed),
-                None => (rng::StdRng::new(), WithNew)
+                None => (Default::default(), WithNew)
             };
 
             let rng = @mut rng::ReseedingRng::from_options(sub_rng,
@@ -174,7 +174,7 @@ pub fn random<R: Rand>() -> R {
 }
 
 pub fn rng() -> rng::StdRng {
-    rng::StdRng::new()
+    Default::default()
 }
 
 

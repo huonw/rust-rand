@@ -51,25 +51,34 @@ pub struct StdRng { priv rng: Isaac }
 #[cfg(target_word_size="64")]
 pub struct StdRng { priv rng: Isaac64 }
 
-impl StdRng {
+impl Default for StdRng {
     #[cfg(not(target_word_size="64"))]
-    pub fn new() -> StdRng {
+    fn default() -> StdRng {
         StdRng { rng: Isaac::new() }
     }
     #[cfg(target_word_size="64")]
-    pub fn new() -> StdRng {
+    fn default() -> StdRng {
         StdRng { rng: Isaac64::new() }
     }
 }
 
 impl Rng for StdRng {
-    #[inline(always)]
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.rng.next_u32()
     }
-    #[inline(always)]
+    #[inline]
+    fn entropy_u32(&self) -> uint {
+        self.rng.entropy_u32()
+    }
+
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         self.rng.next_u64()
+    }
+    #[inline]
+    fn entropy_u64(&self) -> uint {
+        self.rng.entropy_u64()
     }
 }
 
