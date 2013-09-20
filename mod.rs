@@ -111,7 +111,7 @@ pub fn task_rng() -> @mut TaskRng {
     let r = local_data::get(TASK_RNG_KEY, |k| k.map(|&k| *k));
     match r {
         None => {
-            let seed: Option<uint> = do os::getenv("RUST_SEED").chain |s| {
+            let seed: Option<uint> = do os::getenv("RUST_SEED").and_then |s| {
                 FromStr::from_str(s)
             };
 
@@ -204,7 +204,7 @@ impl<R:Rng> RandIterator<R> {
     }
 }
 
-impl<R: Rng, X: Rand> std::iterator::Iterator<X> for RandIterator<R> {
+impl<R: Rng, X: Rand> std::iter::Iterator<X> for RandIterator<R> {
     fn next(&mut self) -> Option<X> {
         Some(self.rng.gen())
     }
