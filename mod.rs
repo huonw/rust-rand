@@ -243,10 +243,6 @@ pub trait Rand {
     }
 }
 
-// Causes an ICE if these are placed in the appropriate function.
-static GEN_ASCII_STR_CHARSET: &'static [u8] = bytes!("ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                                                      abcdefghijklmnopqrstuvwxyz\
-                                                      0123456789");
 static SCALE_32: f32 = ((u32::max_value as f32) + 1.0f32);
 static SCALE_64: f64 = ((u64::max_value as f64) + 1.0f64);
 
@@ -406,6 +402,9 @@ pub trait Rng {
     /// }
     /// ~~~
     fn gen_ascii_str(&mut self, len: uint) -> ~str {
+        static GEN_ASCII_STR_CHARSET: &'static [u8] = bytes!("ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                                                             abcdefghijklmnopqrstuvwxyz\
+                                                             0123456789");
         let mut s = str::with_capacity(len);
         for _ in range(0, len) {
             s.push_char(*self.choose(GEN_ASCII_STR_CHARSET).unwrap() as char)
