@@ -1,6 +1,6 @@
 use Rng;
 use SeedableRng;
-use std::{cast, vec, sys};
+use std::{cast, vec, mem};
 
 pub use self::xorshift::XorShift4;
 pub use self::mersenne_twister::{MT19937, MT19937_64, WELL512};
@@ -32,7 +32,7 @@ pub mod hardware;
 /// Create a random seed. This transmutes a raw byte vector and so
 /// should only be used with types for which any bit pattern is safe.
 pub unsafe fn seed<T>(len: uint) -> ~[T] {
-    let byte_size = len * sys::nonzero_size_of::<T>();
+    let byte_size = len * mem::nonzero_size_of::<T>();
     let mut vec = vec::from_elem(byte_size, 0u8);
 
     let rng: OSRng = OSRng::new();

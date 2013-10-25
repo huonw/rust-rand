@@ -3,7 +3,7 @@ use Rng;
 use super::{ziggurat_tables, Sample, Distribution};
 use super::ziggurat_tables::ziggurat;
 
-use std::{num, f64};
+use std::{num};
 
 pub struct Normal {
     mean: f64,
@@ -33,8 +33,9 @@ impl Distribution<f64> for Normal {
         fail!("unimplemented");
     }
 
-    fn cumulative(&self, sample: f64) -> f64 {
-        0.5 + 0.5 * f64::delegated::erf((sample - self.mean) / num::sqrt(self.sd * Real::two_pi()))
+    fn cumulative(&self, _sample: f64) -> f64 {
+        //0.5 + 0.5 * f64::erf((sample - self.mean) / num::sqrt(self.sd * Real::two_pi()))
+        fail!() // what
     }
     fn density(&self, sample: f64) -> f64 {
         let standard = (sample - self.mean) / self.sd;

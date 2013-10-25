@@ -19,7 +19,7 @@ impl CPURng {
     /// Check if the CPU has an RNG.
     pub fn is_supported() -> bool {
         // XXX: use cpuid to check
-        let mut rcx = 0;
+        let mut rcx: u64;
         unsafe {
             asm!("cpuid"
                  : "={rcx}"(rcx)
@@ -41,8 +41,8 @@ impl Rng for CPURng {
         static NEXT_U64_ATTEMPTS: uint = 3;
 
         for _ in range(0, NEXT_U64_ATTEMPTS) {
-            let mut rand = 0u64;
-            let mut ok = 0u8;
+            let mut rand: u64;
+            let mut ok: u8;
 
             unsafe {
                 asm!("rdrand $0
@@ -50,7 +50,7 @@ impl Rng for CPURng {
             }
             if ok == 1 { return rand; }
         }
-        fail!("CPURng failed %u times in row.", NEXT_U64_ATTEMPTS)
+        fail!("CPURng failed {} times in row.", NEXT_U64_ATTEMPTS)
     }
 
     // doesn't consume any entropy at the Rust level.

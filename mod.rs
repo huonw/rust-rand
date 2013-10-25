@@ -4,6 +4,7 @@
        uuid = "a530b1e1-501a-4e49-9c03-bf9b55c8c63c")];
 
 #[crate_type="lib"];
+#[feature(macro_rules, globs)];
 
 /*!
 Random number generation.
@@ -78,7 +79,7 @@ impl rng::reseeding::Reseeder<rng::StdRng> for TaskRngReseeder {
     fn new() -> TaskRngReseeder {
         WithNew
     }
-    fn reseed(&mut self, rng: &mut rng::StdRng) {
+    fn reseed(&mut self, _rng: &mut rng::StdRng) {
         match *self {
             WithNew => {
                 // FIXME
@@ -108,7 +109,7 @@ static TASK_RNG_KEY: local_data::Key<@mut TaskRng> = &local_data::Key;
 /// may yield differing sequences on different computers, even when
 /// explicitly seeded with `seed_task_rng`.
 pub fn task_rng() -> @mut TaskRng {
-    let r = local_data::get(TASK_RNG_KEY, |k| k.map(|&k| *k));
+    let r = local_data::get(TASK_RNG_KEY, |k| k.map(|&k| k));
     match r {
         None => {
             let seed: Option<uint> = do os::getenv("RUST_SEED").and_then |s| {
@@ -379,12 +380,12 @@ pub trait Rng {
     /// ~~~
     fn gen_integer_range<T: Rand + Int>(&mut self, low: T, high: T) -> T {
         assert!(low < high, "RNG.gen_range called with low >= high");
-        let range = (high - low).to_u64();
+        let range = (high - low).to_u64().unwrap();
         let accept_zone = u64::max_value - u64::max_value % range;
         loop {
             let rand = self.gen::<u64>();
             if rand < accept_zone {
-                return low + NumCast::from(rand % range);
+                return low + NumCast::from(rand % range).unwrap();
             }
         }
     }
@@ -511,7 +512,7 @@ pub trait Rng {
         for (i, elem) in iter.enumerate() {
             if i < n {
                 reservoir.push(elem);
-                loop
+                continue;
             }
 
             let k = self.gen_integer_range(0, i + 1);
@@ -614,13 +615,6 @@ impl Rand for u64 {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> u64 {
         rng.next_u64()
-    }
-}
-
-impl Rand for float {
-    #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> float {
-        rng.gen::<f64>() as float
     }
 }
 

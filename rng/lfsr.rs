@@ -51,7 +51,7 @@ impl SeedableRng<[u64, .. 5]> for LFSR258 {
     fn reseed(&mut self, seed: [u64, .. 5]) {
         for (i, (seed_val, limit)) in seed.iter().zip(LFSR258_LIMITS.iter()).enumerate() {
             assert!(*seed_val >= *limit,
-                    "LFSR258 requires seed number %u to be at least %? (recieved %?)",
+                    "LFSR258 requires seed number {} to be at least {} (recieved {})",
                     i, *limit, *seed_val);
         }
         self.z1 = seed[0];

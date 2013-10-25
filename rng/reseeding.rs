@@ -113,7 +113,7 @@ pub struct ReseedWithNew;
 impl<R: Rng> Reseeder<R> for ReseedWithNew {
     fn new() -> ReseedWithNew { ReseedWithNew }
 
-    fn reseed(&mut self, rng: &mut R) {
+    fn reseed(&mut self, _rng: &mut R) {
         // FIXME
         // *rng = Rng::new();
     }
@@ -130,13 +130,6 @@ impl<R> Reseeder<R> for ~fn(&mut R) {
 }
 impl<'self, R> Reseeder<R> for &'self fn(&mut R) {
     fn new() -> &'self fn(&mut R) { |_| {} }
-
-    fn reseed(&mut self, rng: &mut R) {
-        (*self)(rng)
-    }
-}
-impl<R> Reseeder<R> for @fn(&mut R) {
-    fn new() -> @fn(&mut R) { |_| {} }
 
     fn reseed(&mut self, rng: &mut R) {
         (*self)(rng)

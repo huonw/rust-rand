@@ -9,8 +9,8 @@ pub struct OSRng {
 
 impl OSRng {
     pub fn new() -> OSRng {
-        match io::file_reader(&Path("/dev/urandom")) {
-            Err(e) => fail!("error opening /dev/urandom: %s", e),
+        match io::file_reader(&Path::new("/dev/urandom")) {
+            Err(e) => fail!("error opening /dev/urandom: {}", e),
             Ok(urandom) => OSRng { handle: urandom }
         }
     }
@@ -43,8 +43,8 @@ pub struct OSSecureRng {
 
 impl OSSecureRng {
     pub fn new() -> OSSecureRng {
-        match io::file_reader(&Path("/dev/random")) {
-            Err(e) => fail!("error opening /dev/random: %s", e),
+        match io::file_reader(&Path::new("/dev/random")) {
+            Err(e) => fail!("error opening /dev/random: {}", e),
             Ok(random) => OSSecureRng { handle: random }
         }
     }
